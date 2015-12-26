@@ -73,7 +73,8 @@ public class App {
 	// Metods for Image prep
 	// Image Cropping 
 	private Mat cropImage(Mat input) {
-		Rect roi = new Rect(borderx1 + 20, bordery1 + 35, borderx2 - 30, bordery2 - 15);
+		Rect roi = new Rect(borderx1, bordery1, borderx2, bordery2);
+		//new Rect(borderx1 + 20, bordery1 + 35, borderx2 - 30, bordery2 - 15);
 		Mat snapshotCropped = new Mat(input, roi);
 		return snapshotCropped;
 	}
@@ -107,7 +108,7 @@ public class App {
 
 	// FaceDetection Cascade Classifier laden und faceDetector erstellen
 	private void loadCascade() {
-		String cascadePath = "src/cascades/lbpcascade_frontalface.xml";
+		String cascadePath = "cascades/lbpcascades/lbpcascade_frontalface.xml";
 	    faceDetector = new CascadeClassifier(cascadePath);
 	}
 
@@ -215,7 +216,7 @@ public class App {
 				String nachname = namen[1];
 				
 				// save picture
-				Imgcodecs.imwrite("src/media/test/" + personId + "-" + vorname + "_" + nachname + "_" + imageCounter + ".png", grayImage);
+				Imgcodecs.imwrite("media/test/" + personId + "-" + vorname + "_" + nachname + "_" + imageCounter + ".png", grayImage);
 				
 				// System status message
 				System.out.println("Snapshot: " + personId + vorname + "_" + nachname + "_" + imageCounter + ".png" + "taken");
@@ -257,6 +258,11 @@ public class App {
 					System.out.println(" -- Frame not captured -- Break!"); 
 					break;  
 				}
+				try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 			}  
 		}
 		else{
@@ -271,7 +277,7 @@ public class App {
 		fileReader tempFr = new fileReader();
 		int result = 0;
 	    MatOfRect faceDetections = new MatOfRect();
-	    faceDetector.detectMultiScale(image, faceDetections, 1.1, 7,0,new Size(250,40),new Size());
+	    faceDetector.detectMultiScale(image, faceDetections); //, 1.1, 7,0,new Size(200,200),new Size());
 	    // Draw a bounding box around each face.
 	    for (Rect rect : faceDetections.toArray()) {
 	    	// Display Rect around face
@@ -288,9 +294,9 @@ public class App {
 				Mat grayImage = new Mat();
 				Imgproc.cvtColor(scaleImage, grayImage, Imgproc.COLOR_BGR2GRAY);
 				
-				Imgcodecs.imwrite("src/media/temp.png", grayImage);
+				Imgcodecs.imwrite("media/temp.png", grayImage);
 				
-				result = faceR.startRecognition("src/media/temp.png");
+				result = faceR.startRecognition("media/temp.png");
 				System.out.println(result);
 				if(result != 0) {
 					String personName = tempFr.getName(result);

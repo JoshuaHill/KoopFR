@@ -26,7 +26,7 @@ public class fileReader {
 		int imageId = 0;
 		
 		try {
-			fr = new FileReader("src/media/test/test.txt");
+			fr = new FileReader("media/test/test.txt");
 			br = new BufferedReader(fr);
 
 			while ((line = br.readLine()) != null) {
@@ -51,7 +51,7 @@ public class fileReader {
 	public String getName(int id) {
 		int tempId = 0;
 		try {
-			fr = new FileReader("src/media/test/test.txt");
+			fr = new FileReader("media/test/test.txt");
 			br = new BufferedReader(fr);
 			
 			while (((line = br.readLine()) != null) && (tempId < id)) {
@@ -71,7 +71,7 @@ public class fileReader {
 	// Add new Entry
 	public void addEntry(String name) {
 		try {
-			output = new BufferedWriter(new FileWriter("src/media/test/test.txt", true));
+			output = new BufferedWriter(new FileWriter("media/test/test.txt", true));
 			output.newLine();
 			output.append(name);
 			output.close();

@@ -12,7 +12,7 @@ public class FaceRecog {
 	
 	
 
-	public String trainingDir = "src/media/test/";
+	public String trainingDir = "media/test/";
 	// private FaceRecognizer faceRecognizer = createFisherFaceRecognizer();
 	// private FaceRecognizer faceRecognizer = createEigenFaceRecognizer();
     private FaceRecognizer faceRecognizer = createLBPHFaceRecognizer();
