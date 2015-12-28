@@ -1,4 +1,4 @@
-package faceCapture;
+package de.hdm.faceCapture;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -29,6 +29,12 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
+/**
+ * Some elements of this code can be found at:
+ * https://blog.openshift.com/day-12-opencv-face-detection-for-java-developers/
+ * 
+ *
+ */
 
 public class App {
 	
@@ -74,7 +80,7 @@ public class App {
 	// Image Cropping 
 	private Mat cropImage(Mat input) {
 		Rect roi = new Rect(borderx1, bordery1, borderx2, bordery2);
-		//new Rect(borderx1 + 20, bordery1 + 35, borderx2 - 30, bordery2 - 15);
+		//Rect roi = new Rect(borderx1 + 20, bordery1 + 35, borderx2 - 30, bordery2 - 15);
 		Mat snapshotCropped = new Mat(input, roi);
 		return snapshotCropped;
 	}
@@ -108,7 +114,7 @@ public class App {
 
 	// FaceDetection Cascade Classifier laden und faceDetector erstellen
 	private void loadCascade() {
-		String cascadePath = "cascades/lbpcascades/lbpcascade_frontalface.xml";
+		String cascadePath = "resources/cascades/lbpcascades/lbpcascade_frontalface.xml";
 	    faceDetector = new CascadeClassifier(cascadePath);
 	}
 
@@ -158,7 +164,7 @@ public class App {
 				personId = fr.getImageId() + 1;
 				pictureName = nameInput;
 				fr.addEntry(personId + "-" + nameInput);
-				System.out.println(personId + "-" + nameInput + "added to list");
+				System.out.println(personId + "-" + nameInput + " added to list");
 			}
 		});
 		
@@ -258,11 +264,6 @@ public class App {
 					System.out.println(" -- Frame not captured -- Break!"); 
 					break;  
 				}
-				try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
 			}  
 		}
 		else{
@@ -277,7 +278,7 @@ public class App {
 		fileReader tempFr = new fileReader();
 		int result = 0;
 	    MatOfRect faceDetections = new MatOfRect();
-	    faceDetector.detectMultiScale(image, faceDetections); //, 1.1, 7,0,new Size(200,200),new Size());
+	    faceDetector.detectMultiScale(image, faceDetections, 1.1, 7,0,new Size(50,50),new Size());
 	    // Draw a bounding box around each face.
 	    for (Rect rect : faceDetections.toArray()) {
 	    	// Display Rect around face

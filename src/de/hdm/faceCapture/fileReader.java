@@ -1,4 +1,4 @@
-package faceCapture;
+package de.hdm.faceCapture;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

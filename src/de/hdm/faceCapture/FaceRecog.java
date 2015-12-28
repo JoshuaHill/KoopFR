@@ -1,4 +1,4 @@
-package faceCapture;
+package de.hdm.faceCapture;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -7,6 +7,12 @@ import java.nio.IntBuffer;
 import static org.bytedeco.javacpp.opencv_face.*;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgcodecs.*;
+/**
+ * 
+ * This is mostly taken from http://bytedeco.org/
+ * see also https://github.com/bytedeco/javacv/blob/master/samples/OpenCVFaceRecognizer.java9
+ *
+ */
 
 public class FaceRecog {
 	
