@@ -26,7 +26,8 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
 
 public class FacePicture {
-    private static String cascadePath = "resources/cascades/lbpcascades/lbpcascade_frontalface.xml";
+    //private static String cascadePath = "resources/cascades/lbpcascades/lbpcascade_frontalface.xml";
+    private static String cascadePath = "resources/cascades/haarcascades/haarcascade_frontalface_alt.xml";
     private static CascadeClassifier faceDetector = new CascadeClassifier(cascadePath);
     private Mat picture;
 
@@ -91,7 +92,7 @@ public class FacePicture {
         int verticalPos = 50;
         for (String text : texts) {
             Imgproc.putText(picture, text, new Point(20, verticalPos), 2, 1, new Scalar(0, 0, 255));
-            verticalPos += 12;
+            verticalPos += 25;
         }
     }
 

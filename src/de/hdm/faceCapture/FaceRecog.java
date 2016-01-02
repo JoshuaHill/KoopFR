@@ -59,7 +59,6 @@ public class FaceRecog {
 
         // train the recognizer with all files found
         MatVector images = new MatVector(fileCount);
-        ;
         Mat labels = new Mat(fileCount, 1, CV_32SC1);
         IntBuffer labelsBuf = labels.getIntBuffer();
 

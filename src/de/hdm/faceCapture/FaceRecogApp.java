@@ -1,5 +1,6 @@
 package de.hdm.faceCapture;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -12,6 +13,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -72,14 +74,17 @@ public class FaceRecogApp extends JFrame {
     // GUI: Initialisierung
     private void initGUI() {
 
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
+        setLayout(new BorderLayout());
         // Einzelne Bestandteile einladen
-        add(imageLabel);
-        imageLabel.setAlignmentX(CENTER_ALIGNMENT);
-        add(createTakePictureButton());
-        add(createImportPictureButton());
-        add(check);
-        check.setAlignmentX(CENTER_ALIGNMENT);
+        add(imageLabel, BorderLayout.CENTER);
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
+        buttonPanel.add(createTakePictureButton());
+        buttonPanel.add(createImportPictureButton());
+        buttonPanel.add(check);
+        
+        add(buttonPanel, BorderLayout.SOUTH);
 
         addWindowListener(new WindowAdapter() {
 
@@ -111,7 +116,6 @@ public class FaceRecogApp extends JFrame {
                 new AddFaceDialog(webcamImage);
             }
         });
-        pictureButton.setAlignmentX(CENTER_ALIGNMENT);
         return pictureButton;
     }
 
@@ -141,7 +145,6 @@ public class FaceRecogApp extends JFrame {
                 new AddFaceDialog(fp);
             }
         });
-        pictureButton.setAlignmentX(CENTER_ALIGNMENT);
         return pictureButton;
     }
 
@@ -150,7 +153,6 @@ public class FaceRecogApp extends JFrame {
         // sneak in faceRec training ;)
         //FaceRecog.initFaceRec();
         FaceRecog.retrain();
-        running = true;
 
         capture = new VideoCapture(0);
         capture.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 640);
@@ -166,16 +168,15 @@ public class FaceRecogApp extends JFrame {
         MatOfRect faceDetections = null;
         FacePicture[] faces = null;
         String names[] = null;
+        running = true;
         while (running) {
             if (webcamImage.capture(capture)) {
                 faceDetections = webcamImage.detectFaces();
                 webcamImage.drawRectangles(faceDetections);
-                if (!faceDetections.empty()) {
-                    if (check.isSelected()) {
+                if (!faceDetections.empty() && check.isSelected()) {
                         faces = webcamImage.isolateFaces(faceDetections);
                         names = FaceRecog.recognizeFaces(faces);
                         webcamImage.putTexts(names);
-                    }
                 }
                 webcamImage.drawToLabel(imageLabel);
                 repaint();
