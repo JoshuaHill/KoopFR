@@ -7,7 +7,7 @@ import org.opencv.core.Mat;
 
 public class ImageProcessor {
 
-	public BufferedImage toBufferedImage(Mat matrix){
+	public static BufferedImage toBufferedImage(Mat matrix){
 		int type = BufferedImage.TYPE_BYTE_GRAY;
 		if ( matrix.channels() > 1 ) {
 			type = BufferedImage.TYPE_3BYTE_BGR;
