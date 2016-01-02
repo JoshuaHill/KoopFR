@@ -39,10 +39,8 @@ public class FaceRecogApp extends JFrame {
     }
 
 
-    private JLabel imageLabel = new JLabel();
-    
+    private JLabel imageLabel = new JLabel();    
     private FacePicture webcamImage = new FacePicture();
-    
     private JCheckBox check = new JCheckBox("Face Recognition enabled", false);
     private JFileChooser importFileChooser = null;
 
@@ -51,7 +49,7 @@ public class FaceRecogApp extends JFrame {
 
     // Main Methode
     public static void main(String[] args) {
-        FaceRecogApp app = new FaceRecogApp();
+        FaceRecogApp app = new FaceRecogApp("Face Recognizer");
         app.initGUI();
         app.runMainLoop(args);
     }
@@ -67,6 +65,10 @@ public class FaceRecogApp extends JFrame {
      * To be implemented / Nice to have
      */
 
+    public FaceRecogApp(String windowName){
+        super(windowName);
+    }
+    
     // GUI: Initialisierung
     private void initGUI() {
 
@@ -146,7 +148,8 @@ public class FaceRecogApp extends JFrame {
     // Image Processing Main Loop
     private void runMainLoop(String[] args) {
         // sneak in faceRec training ;)
-        FaceRecog.initFaceRec();
+        //FaceRecog.initFaceRec();
+        FaceRecog.retrain();
         running = true;
 
         capture = new VideoCapture(0);

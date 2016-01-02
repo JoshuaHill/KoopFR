@@ -2,6 +2,8 @@ package de.hdm.faceCapture;
 
 import static org.bytedeco.javacpp.opencv_core.CV_32SC1;
 import static org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer;
+//import static org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer;
+//import static org.bytedeco.javacpp.opencv_face.createEigenFaceRecognizer;
 import static org.bytedeco.javacpp.opencv_imgcodecs.CV_LOAD_IMAGE_GRAYSCALE;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 
@@ -25,56 +27,52 @@ public class FaceRecog {
 
     public static String trainingDir = "media/";
     private static File[] directories = new File[0];
-    // private FaceRecognizer faceRecognizer =
-    // opencv_face.createFisherFaceRecognizer();
-    // private FaceRecognizer faceRecognizer =
-    // opencv_face.createEigenFaceRecognizer();
+    // private static FaceRecognizer faceRecognizer =
+    // createFisherFaceRecognizer();
+    // private static FaceRecognizer faceRecognizer =
+    // createEigenFaceRecognizer();
     private static FaceRecognizer faceRecognizer = createLBPHFaceRecognizer();
+    private static FilenameFilter imgFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            name = name.toLowerCase();
+            return name.endsWith(".jpg") || name.endsWith(".pgm") || name.endsWith(".png");
+        }
+    };
 
     // Training
-    @SuppressWarnings("deprecation")
-    public static void initFaceRec() {
-
+    public static void retrain() {
         directories = new File(trainingDir).listFiles();
-        System.out.println("Media directories: " + directories.length);
+        System.out.println("(Re)train using " + directories.length + " Media directories: ");
 
-        FilenameFilter imgFilter = new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                name = name.toLowerCase();
-                return name.endsWith(".jpg") || name.endsWith(".pgm") || name.endsWith(".png");
-            }
-        };
-
-        MatVector images;
-        Mat labels;
-        IntBuffer labelsBuf;
-
-        faceRecognizer.clear();
+        // collect and count all image files in all media directories
+        File[][] files = new File[directories.length][];
+        int fileCount = 0;
         for (int dirCounter = 0; dirCounter < directories.length; dirCounter++) {
             File dir = directories[dirCounter];
             if (dir.isDirectory()) {
-                File[] imageFiles = dir.listFiles(imgFilter);
-                if (imageFiles.length == 0) {
-                    continue;
-                }
-                images = new MatVector(imageFiles.length);
-                labels = new Mat(imageFiles.length, 1, CV_32SC1);
-                labelsBuf = labels.getIntBuffer();
-
-                for (int imageCounter = 0; imageCounter < imageFiles.length; imageCounter++) {
-                    File image = imageFiles[imageCounter];
-                    Mat img = imread(image.getAbsolutePath(), CV_LOAD_IMAGE_GRAYSCALE);
-
-                    images.put(imageCounter, img);
-                    labelsBuf.put(imageCounter, dirCounter);
-                }
-                // System.out.println("updating face recognizer with " +
-                // dir.getName());
-                faceRecognizer.update(images, labels);
+                files[dirCounter] = dir.listFiles(imgFilter);
+                fileCount += files[dirCounter].length;
+            } else {
+                files[dirCounter] = new File[0];
             }
-
         }
-        // faceRecognizer.train(images, labels);
+
+        // train the recognizer with all files found
+        MatVector images = new MatVector(fileCount);
+        ;
+        Mat labels = new Mat(fileCount, 1, CV_32SC1);
+        IntBuffer labelsBuf = labels.getIntBuffer();
+
+        Mat img = null;
+        for (int dirCounter = 0; dirCounter < files.length; dirCounter++) {
+            for (File imageFile : files[dirCounter]) {
+                fileCount--;
+                img = imread(imageFile.getAbsolutePath(), CV_LOAD_IMAGE_GRAYSCALE);
+                images.put(fileCount, img);
+                labelsBuf.put(fileCount, dirCounter);
+            }
+        }
+        faceRecognizer.train(images, labels);
     }
 
     // Recognition using saved picture
@@ -98,7 +96,7 @@ public class FaceRecog {
 
     public static String[] recognizeFaces(FacePicture[] faces) {
         String[] names = new String[faces.length];
-        for (int i = 0; i<faces.length; i++) {
+        for (int i = 0; i < faces.length; i++) {
             names[i] = recognizeFace(faces[i]);
         }
         return names;

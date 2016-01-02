@@ -37,8 +37,9 @@ public class AddFaceDialog extends JDialog {
             Rect[] detections = rects.toArray();
             for (int i = 0; i < detections.length; i++) {
                 Rect rect = detections[i];
-                candidate.drawRectangle(new Rect(rect.x+2, rect.y+2, rect.width-4, rect.height-4));
-                candidate.drawToLabel(imageLabel);
+                FacePicture fp = new FacePicture(candidate);
+                fp.drawRectangle(new Rect(rect.x, rect.y, rect.width, rect.height));
+                fp.drawToLabel(imageLabel);
                 repaint();
 
                 if (pictureDirChooser == null) {
@@ -57,7 +58,7 @@ public class AddFaceDialog extends JDialog {
             }
             setVisible(false);
             dispose();
-            FaceRecog.initFaceRec();
+            FaceRecog.retrain();
         }
     }
 
@@ -74,15 +75,19 @@ public class AddFaceDialog extends JDialog {
     private void initGui() {
         this.setLayout(new BorderLayout());
         add(imageLabel, BorderLayout.CENTER);
+        candidate.drawToLabel(imageLabel);
+        
         if (candidate != null) {
             MatOfRect rects = candidate.detectFaces();
 
             if (!rects.empty()) {
-                candidate.drawRectangles(rects);
+                FacePicture fp = new FacePicture(candidate);
+                fp.drawRectangles(rects);
 
                 JButton saveFacesButton = new JButton("Save faces");
                 saveFacesButton.addActionListener(new saveFacesButtonActionListener(rects));
                 add(saveFacesButton, BorderLayout.SOUTH);
+                fp.drawToLabel(imageLabel);
             } else {
                 JButton quitButton = new JButton("No faces detected. Close Window.");
                 quitButton.addActionListener(new ActionListener() {
@@ -95,9 +100,7 @@ public class AddFaceDialog extends JDialog {
             }
         }
 
-        candidate.drawToLabel(imageLabel);
         pack();
-
         setVisible(true);
     }
 
