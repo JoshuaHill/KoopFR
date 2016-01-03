@@ -26,7 +26,7 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
 
 public class FacePicture {
-    //private static String cascadePath = "resources/cascades/lbpcascades/lbpcascade_frontalface.xml";
+//    private static String cascadePath = "resources/cascades/lbpcascades/lbpcascade_frontalface.xml";
     private static String cascadePath = "resources/cascades/haarcascades/haarcascade_frontalface_alt.xml";
     private static CascadeClassifier faceDetector = new CascadeClassifier(cascadePath);
     private Mat picture;

@@ -1,9 +1,6 @@
 package de.hdm.faceCapture;
 
 import static org.bytedeco.javacpp.opencv_core.CV_32SC1;
-import static org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer;
-//import static org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer;
-//import static org.bytedeco.javacpp.opencv_face.createEigenFaceRecognizer;
 import static org.bytedeco.javacpp.opencv_imgcodecs.CV_LOAD_IMAGE_GRAYSCALE;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 
@@ -25,13 +22,12 @@ import org.bytedeco.javacpp.opencv_face.FaceRecognizer;
 
 public class FaceRecog {
 
-    public static String trainingDir = "media/";
+    private static String trainingDir = "media/";
     private static File[] directories = new File[0];
-    // private static FaceRecognizer faceRecognizer =
-    // createFisherFaceRecognizer();
-    // private static FaceRecognizer faceRecognizer =
-    // createEigenFaceRecognizer();
-    private static FaceRecognizer faceRecognizer = createLBPHFaceRecognizer();
+    private static FaceRecognizer faceRecognizer =
+//    org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer();
+//    org.bytedeco.javacpp.opencv_face.createEigenFaceRecognizer();
+    org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer();
     private static FilenameFilter imgFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
             name = name.toLowerCase();
@@ -42,7 +38,7 @@ public class FaceRecog {
     // Training
     public static void retrain() {
         directories = new File(trainingDir).listFiles();
-        System.out.println("(Re)train using " + directories.length + " Media directories: ");
+        System.out.println("(Re)train using " + directories.length + " media directories");
 
         // collect and count all image files in all media directories
         File[][] files = new File[directories.length][];
