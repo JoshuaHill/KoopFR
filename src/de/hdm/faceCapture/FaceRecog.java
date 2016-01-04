@@ -6,6 +6,7 @@ import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.nio.IntBuffer;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -36,13 +37,13 @@ public class FaceRecog {
     };
 
     // Training
-    public static void retrain() {
+    public static void retrain(String trainingDir) {
         File mediaDir = new File(trainingDir);
         if (!mediaDir.exists() || !mediaDir.isDirectory()) {
             mediaDir.mkdirs();
         }
         directories = mediaDir.listFiles();
-        System.out.println("(Re)train using " + directories.length + " media directories");
+        System.out.println("(Re)train using " + directories.length + " media directories in " + mediaDir.getPath());
 
         // collect and count all image files in all media directories
         File[][] files = new File[directories.length][];
@@ -82,20 +83,25 @@ public class FaceRecog {
     // Recognition using saved picture
     public static String recognizeFace(FacePicture face) {
         if (face != null) {
-            String tmpFilePath = trainingDir + "temp.png";
-            face.writeToPathname(tmpFilePath);
+            try {
+                File tmpFile = File.createTempFile("temp", ".png");
+                String tmpFilePath = tmpFile.getPath();
+                face.writeToPathname(tmpFilePath);
 
-            int[] prediction = new int[1];
-            double[] confidence = new double[1];
+                int[] prediction = new int[1];
+                double[] confidence = new double[1];
 
-            faceRecognizer.predict(imread(tmpFilePath, CV_LOAD_IMAGE_GRAYSCALE), prediction, confidence);
-            // System.out.println("Predict " +
-            // directories[prediction[0]].getName() + " with confidence " +
-            // confidence[0]);
-            return directories[prediction[0]].getName();
-        } else {
-            return null;
+                faceRecognizer.predict(imread(tmpFilePath, CV_LOAD_IMAGE_GRAYSCALE), prediction, confidence);
+                // System.out.println("Predict " +
+                // directories[prediction[0]].getName() + " with confidence " +
+                // confidence[0]);
+                tmpFile.delete();
+                return directories[prediction[0]].getName();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+        return null;
     }
 
     public static String[] recognizeFaces(FacePicture[] faces) {

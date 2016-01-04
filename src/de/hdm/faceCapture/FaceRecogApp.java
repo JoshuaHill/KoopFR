@@ -42,6 +42,7 @@ public class FaceRecogApp extends JFrame {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
+    private static String trainingDir = "media/";
     private JLabel imageLabel = new JLabel();
     private FacePicture webcamImage = new FacePicture();
     private JCheckBox check = new JCheckBox("Face Recognition enabled", false);
@@ -56,9 +57,12 @@ public class FaceRecogApp extends JFrame {
 
     // Main Methode
     public static void main(String[] args) {
+        if (args.length>0) {
+            trainingDir = args[0];
+        }
         FaceRecogApp app = new FaceRecogApp("Face Recognizer");
         app.initGUI();
-        app.runMainLoop(args);
+        app.start();
     }
 
     // Image Noise Reduction via Non Local Means Denoising [Optionale
@@ -74,13 +78,13 @@ public class FaceRecogApp extends JFrame {
 
     public FaceRecogApp(String windowName) {
         super(windowName);
+        Arrays.fill(last100Names, "");
     }
 
     // GUI: Initialisierung
     private void initGUI() {
 
         setLayout(new BorderLayout());
-        // Einzelne Bestandteile einladen
         add(imageLabel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
@@ -103,8 +107,19 @@ public class FaceRecogApp extends JFrame {
             }
 
         });
+        FaceRecog.retrain(trainingDir);
 
-        center();
+        capture = new VideoCapture(Integer.parseInt(System.getProperty("CaptureDevice", "0")));
+        // capture.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 640);
+        // capture.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, 480);
+        if (webcamImage.capture(capture)) {
+            webcamImage.drawToLabel(imageLabel);
+        }
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                center();
+            }
+        });
     }
 
     private void center() {
@@ -118,7 +133,10 @@ public class FaceRecogApp extends JFrame {
         JButton pictureButton = new JButton("Take Picture");
         pictureButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                new AddFaceDialog(webcamImage);
+                interruptMainLoop();
+                FacePicture fp = new FacePicture(webcamImage);
+                new AddFaceDialog(fp);
+                resumeMainLoop();
             }
         });
         return pictureButton;
@@ -128,6 +146,7 @@ public class FaceRecogApp extends JFrame {
         JButton pictureButton = new JButton("Import Picture");
         pictureButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
+                interruptMainLoop();
                 // select picture file to be imported
                 if (importFileChooser == null) {
                     importFileChooser = new JFileChooser();
@@ -137,30 +156,31 @@ public class FaceRecogApp extends JFrame {
                     importFileChooser.setCurrentDirectory(new File(System.getProperty("user.home") + "/Pictures"));
                 }
                 int returnVal = importFileChooser.showOpenDialog(null);
-                if (returnVal != JFileChooser.APPROVE_OPTION) {
-                    return;
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+
+                    FacePicture fp = new FacePicture();
+                    fp.importFrom(importFileChooser.getSelectedFile());
+
+                    // just for checks write modified picture to picture dir
+                    // fp.writeToPathname(createPictureFilePathName(pictureDir));
+
+                    new AddFaceDialog(fp);
                 }
-
-                FacePicture fp = new FacePicture();
-                fp.importFrom(importFileChooser.getSelectedFile());
-
-                // just for checks write modified picture to picture dir
-                // fp.writeToPathname(createPictureFilePathName(pictureDir));
-
-                new AddFaceDialog(fp);
+                resumeMainLoop();
             }
         });
         return pictureButton;
     }
 
     /**
-     * add an identified person's name to the data structures for computing
-     * the most frequent name among the last 100 recognized persons
+     * add an identified person's name to the data structures for computing the
+     * most frequent name among the last 100 recognized persons
+     * 
      * @param addedName
      */
     private void addName(String addedName) {
         String removedName = last100Names[revolvingIndex];
-        
+
         if (removedName != "" && nameFrequencies.containsKey(removedName)) {
             nameFrequencies.put(removedName, nameFrequencies.get(removedName) - 1);
         }
@@ -169,14 +189,15 @@ public class FaceRecogApp extends JFrame {
         } else {
             nameFrequencies.put(addedName, new Integer(1));
         }
-        
+
         last100Names[revolvingIndex++] = addedName;
         revolvingIndex %= 100;
-        
+
     }
 
     /**
      * get the most frequent recognized person
+     * 
      * @return
      */
     private String mostFrequentName() {
@@ -191,47 +212,41 @@ public class FaceRecogApp extends JFrame {
         return maxName;
     }
 
-    // Image Processing Main Loop
-    private void runMainLoop(String[] args) {
-        // sneak in faceRec training ;)
-        // FaceRecog.initFaceRec();
-        FaceRecog.retrain();
-        Arrays.fill(last100Names, "");
-        
-        capture = new VideoCapture(Integer.parseInt(System.getProperty("CaptureDevice", "0")));
-        // capture.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 640);
-        // capture.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, 480);
-        if (webcamImage.capture(capture)) {
-            webcamImage.drawToLabel(imageLabel);
-        }
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                center();
-            }
-        });
+    private void interruptMainLoop() {
+        running = false;
+    }
 
-        MatOfRect faceDetections = null;
-        FacePicture[] faces = null;
-        String names[] = null;
-        running = true;
-        while (running) {
-            if (webcamImage.capture(capture)) {
-                faceDetections = webcamImage.detectFaces();
-                webcamImage.drawRectangles(faceDetections);
-                if (!faceDetections.empty() && check.isSelected()) {
-                    faces = webcamImage.isolateFaces(faceDetections);
-                    names = FaceRecog.recognizeFaces(faces);
-                    addName(names[0]);   
-                    webcamImage.putText(mostFrequentName());
-                    //webcamImage.putTexts(names);        
+    private void start() {
+        new Thread() {
+            public void run() {
+                MatOfRect faceDetections = null;
+                FacePicture[] faces = null;
+                String names[] = null;
+                running = true;
+                while (running) {
+                    if (webcamImage.capture(capture)) {
+                        faceDetections = webcamImage.detectFaces();
+                        webcamImage.drawRectangles(faceDetections);
+                        if (!faceDetections.empty() && check.isSelected()) {
+                            faces = webcamImage.isolateFaces(faceDetections);
+                            names = FaceRecog.recognizeFaces(faces);
+                            addName(names[0]);
+                            webcamImage.putText(mostFrequentName());
+                            // webcamImage.putTexts(names);
+                        }
+                        webcamImage.drawToLabel(imageLabel);
+                        repaint();
+                    } else {
+                        System.out.println(" -- Frame not captured -- Break!");
+                        break;
+                    }
                 }
-                webcamImage.drawToLabel(imageLabel);
-                repaint();
-            } else {
-                System.out.println(" -- Frame not captured -- Break!");
-                break;
             }
-        }
+        }.start();
+    }
+
+    private void resumeMainLoop() {
+        start();
     }
 
 }

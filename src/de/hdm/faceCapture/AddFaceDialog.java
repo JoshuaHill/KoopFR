@@ -44,7 +44,7 @@ public class AddFaceDialog extends JDialog {
 
                 File mediaDir = new File("media/");
                 if (!mediaDir.exists() || !mediaDir.isDirectory()) {
-                    mediaDir.mkdirs();
+                    mediaDir = new File(System.getProperty("user.home"));
                 }
 
                 if (pictureDirChooser == null) {
@@ -57,13 +57,14 @@ public class AddFaceDialog extends JDialog {
                 int returnVal = pictureDirChooser.showOpenDialog(null);
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    String path = createPictureFilePathName(pictureDirChooser.getSelectedFile());
+                    File selectedDir = pictureDirChooser.getSelectedFile();
+                    String path = createPictureFilePathName(selectedDir);
                     candidate.isolateFace(rect).writeToPathname(path);
+                    FaceRecog.retrain(selectedDir.getParent());
                 }
             }
             setVisible(false);
             dispose();
-            FaceRecog.retrain();
         }
     }
 
