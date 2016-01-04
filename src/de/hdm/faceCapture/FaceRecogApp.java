@@ -197,8 +197,8 @@ public class FaceRecogApp extends JFrame {
         // FaceRecog.initFaceRec();
         FaceRecog.retrain();
         Arrays.fill(last100Names, "");
-
-        capture = new VideoCapture(0);
+        
+        capture = new VideoCapture(Integer.parseInt(System.getProperty("CaptureDevice", "0")));
         // capture.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 640);
         // capture.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, 480);
         if (webcamImage.capture(capture)) {

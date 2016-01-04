@@ -12,7 +12,12 @@ Instructions
     e.g. media/Christian Rathke/image-0.png, media/Christian Rathke/image-1.png, ...
     
 2. Operation
-	- run StartFaceRecognizer.bat
+	- run "java <args> de.hdm.faceCapture.FaceRecogApp" on the command line replacing <args> by
+		a) -classpath FaceRecognizer.jar;FaceRecognizer_lib
+		and
+		b) -Djava.library.path=lib/x64 -DCaptureDevice=0
+		
+	- the capture device no. may need to be adapted (eg., 1, 2, 3,...)
 	- a person's database of example pictures may be augmented by directly taking his picture from the camera
 	or by importing and	saving it from an image which contains his face
 	- each time a picture is added the face recognizer is retrained with all of the existing pictures

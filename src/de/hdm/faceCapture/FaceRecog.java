@@ -37,7 +37,11 @@ public class FaceRecog {
 
     // Training
     public static void retrain() {
-        directories = new File(trainingDir).listFiles();
+        File mediaDir = new File(trainingDir);
+        if (!mediaDir.exists() || !mediaDir.isDirectory()) {
+            mediaDir.mkdirs();
+        }
+        directories = mediaDir.listFiles();
         System.out.println("(Re)train using " + directories.length + " media directories");
 
         // collect and count all image files in all media directories
@@ -51,6 +55,11 @@ public class FaceRecog {
             } else {
                 files[dirCounter] = new File[0];
             }
+        }
+        
+        if (fileCount == 0) {
+            System.out.println("no media files to train recognizer with");
+            return;
         }
 
         // train the recognizer with all files found

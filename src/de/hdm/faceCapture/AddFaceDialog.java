@@ -42,12 +42,17 @@ public class AddFaceDialog extends JDialog {
                 fp.drawToLabel(imageLabel);
                 repaint();
 
+                File mediaDir = new File("media/");
+                if (!mediaDir.exists() || !mediaDir.isDirectory()) {
+                    mediaDir.mkdirs();
+                }
+
                 if (pictureDirChooser == null) {
                     pictureDirChooser = new JFileChooser();
                     pictureDirChooser.setAcceptAllFileFilterUsed(false);
 
                     pictureDirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                    pictureDirChooser.setCurrentDirectory(new File("media/"));
+                    pictureDirChooser.setCurrentDirectory(mediaDir);
                 }
                 int returnVal = pictureDirChooser.showOpenDialog(null);
 
