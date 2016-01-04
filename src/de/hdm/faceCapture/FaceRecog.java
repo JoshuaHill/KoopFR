@@ -23,7 +23,6 @@ import org.bytedeco.javacpp.opencv_face.FaceRecognizer;
 
 public class FaceRecog {
 
-    private static String trainingDir = "media/";
     private static File[] directories = new File[0];
     private static FaceRecognizer faceRecognizer =
 //    org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer();

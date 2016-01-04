@@ -133,10 +133,10 @@ public class FaceRecogApp extends JFrame {
         JButton pictureButton = new JButton("Take Picture");
         pictureButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                interruptMainLoop();
+                interruptFaceRecogThread();
                 FacePicture fp = new FacePicture(webcamImage);
                 new AddFaceDialog(fp);
-                resumeMainLoop();
+                resumeFaceRecogThread();
             }
         });
         return pictureButton;
@@ -146,7 +146,7 @@ public class FaceRecogApp extends JFrame {
         JButton pictureButton = new JButton("Import Picture");
         pictureButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                interruptMainLoop();
+                interruptFaceRecogThread();
                 // select picture file to be imported
                 if (importFileChooser == null) {
                     importFileChooser = new JFileChooser();
@@ -166,7 +166,7 @@ public class FaceRecogApp extends JFrame {
 
                     new AddFaceDialog(fp);
                 }
-                resumeMainLoop();
+                resumeFaceRecogThread();
             }
         });
         return pictureButton;
@@ -212,40 +212,43 @@ public class FaceRecogApp extends JFrame {
         return maxName;
     }
 
-    private void interruptMainLoop() {
+    private void interruptFaceRecogThread() {
         running = false;
+    }
+    
+    private class FacRecogThread extends Thread {
+        private MatOfRect faceDetections = null;
+        private FacePicture[] faces = null;
+        private String names[] = null;
+        
+        public void run() {
+            running = true;
+            while (running) {
+                if (webcamImage.capture(capture)) {
+                    faceDetections = webcamImage.detectFaces();
+                    webcamImage.drawRectangles(faceDetections);
+                    if (!faceDetections.empty() && check.isSelected()) {
+                        faces = webcamImage.isolateFaces(faceDetections);
+                        names = FaceRecog.recognizeFaces(faces);
+                        addName(names[0]);
+                        webcamImage.putText(mostFrequentName());
+                        // webcamImage.putTexts(names);
+                    }
+                    webcamImage.drawToLabel(imageLabel);
+                    repaint();
+                } else {
+                    System.out.println(" -- Frame not captured -- Break!");
+                    break;
+                }
+            }
+        }
     }
 
     private void start() {
-        new Thread() {
-            public void run() {
-                MatOfRect faceDetections = null;
-                FacePicture[] faces = null;
-                String names[] = null;
-                running = true;
-                while (running) {
-                    if (webcamImage.capture(capture)) {
-                        faceDetections = webcamImage.detectFaces();
-                        webcamImage.drawRectangles(faceDetections);
-                        if (!faceDetections.empty() && check.isSelected()) {
-                            faces = webcamImage.isolateFaces(faceDetections);
-                            names = FaceRecog.recognizeFaces(faces);
-                            addName(names[0]);
-                            webcamImage.putText(mostFrequentName());
-                            // webcamImage.putTexts(names);
-                        }
-                        webcamImage.drawToLabel(imageLabel);
-                        repaint();
-                    } else {
-                        System.out.println(" -- Frame not captured -- Break!");
-                        break;
-                    }
-                }
-            }
-        }.start();
+        new FacRecogThread().start();
     }
 
-    private void resumeMainLoop() {
+    private void resumeFaceRecogThread() {
         start();
     }
 
