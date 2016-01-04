@@ -12,7 +12,7 @@ Instructions
     e.g. media/Christian Rathke/image-0.png, media/Christian Rathke/image-1.png, ...
     
 2. Operation
-	- run "java <args> de.hdm.faceCapture.FaceRecogApp" on the command line replacing <args> by
+	- run "java '<args>' de.hdm.faceCapture.FaceRecogApp" on the command line replacing '<args>' by
 		a) -classpath FaceRecognizer.jar;FaceRecognizer_lib
 		and
 		b) -Djava.library.path=lib/x64 -DCaptureDevice=0
