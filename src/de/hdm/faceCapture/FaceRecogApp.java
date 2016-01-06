@@ -11,12 +11,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -50,6 +52,7 @@ public class FaceRecogApp extends JFrame {
 
     private boolean running = false;
     private VideoCapture capture = null;
+    private int captureDevice;
 
     private Map<String, Integer> nameFrequencies = new HashMap<String, Integer>();
     private String[] last100Names = new String[100];
@@ -79,6 +82,7 @@ public class FaceRecogApp extends JFrame {
     public FaceRecogApp(String windowName) {
         super(windowName);
         Arrays.fill(last100Names, "");
+        setCaptureDevice(Integer.parseInt(System.getProperty("CaptureDevice", "0")));
     }
 
     // GUI: Initialisierung
@@ -92,7 +96,8 @@ public class FaceRecogApp extends JFrame {
         buttonPanel.add(createTakePictureButton());
         buttonPanel.add(createImportPictureButton());
         buttonPanel.add(check);
-
+        buttonPanel.add(createDeviceRadioButtons());
+        
         add(buttonPanel, BorderLayout.SOUTH);
 
         addWindowListener(new WindowAdapter() {
@@ -109,7 +114,6 @@ public class FaceRecogApp extends JFrame {
         });
         FaceRecog.retrain(trainingDir);
 
-        capture = new VideoCapture(Integer.parseInt(System.getProperty("CaptureDevice", "0")));
         // capture.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 640);
         // capture.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, 480);
         if (webcamImage.capture(capture)) {
@@ -170,6 +174,38 @@ public class FaceRecogApp extends JFrame {
             }
         });
         return pictureButton;
+    }
+    
+    private JPanel createDeviceRadioButtons() {
+        JPanel buttonPanel = new JPanel();
+        ButtonGroup bg = new ButtonGroup();
+        JRadioButton rb; 
+        ActionListener al = new ActionListener(){
+            public void actionPerformed(ActionEvent event){
+                setCaptureDevice(Integer.parseInt(event.getActionCommand()));
+            }
+        };
+        for (int i=0; i<2; i++){
+            rb = new JRadioButton("Camera " + i);
+            rb.setActionCommand(Integer.toString(i));
+            rb.addActionListener(al);
+            bg.add(rb);
+            if (captureDevice == i) {
+                rb.setSelected(true);
+            }
+            buttonPanel.add(rb);
+        }
+        return buttonPanel;
+    }
+    
+    private void setCaptureDevice(int cd){
+        stop();
+        if (capture != null && capture instanceof VideoCapture){
+            capture.release();
+        }
+        captureDevice = cd;
+        capture = new VideoCapture(captureDevice);
+        start();
     }
 
     /**

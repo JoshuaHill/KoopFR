@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
 
-import org.bytedeco.javacpp.opencv_core.CvType;
 import org.opencv.core.Mat;
 
 /**
