@@ -88,11 +88,22 @@ public class FacePicture {
         Imgproc.putText(picture, text, new Point(20, 50), 2, 1, new Scalar(0, 0, 255));
     }
 
+    void putText(String text, Point pos) {
+        Imgproc.putText(picture, text, pos, 2, 0.5, new Scalar(0, 0, 255));
+    }
+
     void putTexts(String[] texts) {
         int verticalPos = 50;
         for (String text : texts) {
             Imgproc.putText(picture, text, new Point(20, verticalPos), 2, 1, new Scalar(0, 0, 255));
             verticalPos += 25;
+        }
+    }
+    
+    void displayNames(String names[], MatOfRect detections) {
+        Rect[] rects = detections.toArray();
+        for (int i=0; i<names.length; i++) {
+            putText(names[i], new Point(rects[i].x, rects[i].y+rects[i].height+25));            
         }
     }
 

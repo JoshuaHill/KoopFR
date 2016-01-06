@@ -133,10 +133,10 @@ public class FaceRecogApp extends JFrame {
         JButton pictureButton = new JButton("Take Picture");
         pictureButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                interruptFaceRecogThread();
+                stop();
                 FacePicture fp = new FacePicture(webcamImage);
                 new AddFaceDialog(fp);
-                resumeFaceRecogThread();
+                start();
             }
         });
         return pictureButton;
@@ -146,7 +146,7 @@ public class FaceRecogApp extends JFrame {
         JButton pictureButton = new JButton("Import Picture");
         pictureButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                interruptFaceRecogThread();
+                stop();
                 // select picture file to be imported
                 if (importFileChooser == null) {
                     importFileChooser = new JFileChooser();
@@ -166,7 +166,7 @@ public class FaceRecogApp extends JFrame {
 
                     new AddFaceDialog(fp);
                 }
-                resumeFaceRecogThread();
+                start();
             }
         });
         return pictureButton;
@@ -212,8 +212,12 @@ public class FaceRecogApp extends JFrame {
         return maxName;
     }
 
-    private void interruptFaceRecogThread() {
+    private void stop() {
         running = false;
+    }
+
+    private void start() {
+        new FacRecogThread().start();
     }
     
     private class FacRecogThread extends Thread {
@@ -230,9 +234,11 @@ public class FaceRecogApp extends JFrame {
                     if (!faceDetections.empty() && check.isSelected()) {
                         faces = webcamImage.isolateFaces(faceDetections);
                         names = FaceRecog.recognizeFaces(faces);
-                        addName(names[0]);
-                        webcamImage.putText(mostFrequentName());
-                        // webcamImage.putTexts(names);
+                        if (names.length==1){
+                            addName(names[0]);
+                            names[0]=mostFrequentName();
+                        }
+                        webcamImage.displayNames(names, faceDetections);
                     }
                     webcamImage.drawToLabel(imageLabel);
                     repaint();
@@ -242,14 +248,6 @@ public class FaceRecogApp extends JFrame {
                 }
             }
         }
-    }
-
-    private void start() {
-        new FacRecogThread().start();
-    }
-
-    private void resumeFaceRecogThread() {
-        start();
     }
 
 }
