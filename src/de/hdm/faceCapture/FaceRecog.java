@@ -6,7 +6,6 @@ import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.nio.IntBuffer;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -25,8 +24,8 @@ public class FaceRecog {
 
     private static File[] directories = new File[0];
     private static FaceRecognizer faceRecognizer =
-//    org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer();
-//    org.bytedeco.javacpp.opencv_face.createEigenFaceRecognizer();
+    // org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer();
+    // org.bytedeco.javacpp.opencv_face.createEigenFaceRecognizer();
     org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer();
     private static FilenameFilter imgFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
@@ -56,7 +55,7 @@ public class FaceRecog {
                 files[dirCounter] = new File[0];
             }
         }
-        
+
         if (fileCount == 0) {
             System.out.println("no media files to train recognizer with");
             return;
@@ -80,8 +79,17 @@ public class FaceRecog {
         faceRecognizer.train(images, labels);
     }
 
-    // Recognition using saved picture
+    // Recognition using direct conversion
     public static String recognizeFace(FacePicture face) {
+        int[] prediction = new int[1];
+        double[] confidence = new double[1];
+
+        faceRecognizer.predict(face.convertToJavaCVMat(), prediction, confidence);
+        return directories[prediction[0]].getName();
+    }
+
+    // Recognition using saved picture
+    /*public static String recognizeFace(FacePicture face) {
         if (face != null) {
             try {
                 File tmpFile = File.createTempFile("temp", ".png");
@@ -102,7 +110,7 @@ public class FaceRecog {
             }
         }
         return null;
-    }
+    }*/
 
     public static String[] recognizeFaces(FacePicture[] faces) {
         String[] names = new String[faces.length];

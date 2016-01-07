@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
+import org.bytedeco.javacpp.opencv_core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -26,7 +27,8 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
 
 public class FacePicture {
-//    private static String cascadePath = "resources/cascades/lbpcascades/lbpcascade_frontalface.xml";
+    // private static String cascadePath =
+    // "resources/cascades/lbpcascades/lbpcascade_frontalface.xml";
     private static String cascadePath = "resources/cascades/haarcascades/haarcascade_frontalface_alt.xml";
     private static CascadeClassifier faceDetector = new CascadeClassifier(cascadePath);
     private Mat picture;
@@ -99,17 +101,27 @@ public class FacePicture {
             verticalPos += 25;
         }
     }
-    
+
     void displayNames(String names[], MatOfRect detections) {
         Rect[] rects = detections.toArray();
-        for (int i=0; i<names.length; i++) {
-            putText(names[i], new Point(rects[i].x, rects[i].y+rects[i].height+25));            
+        for (int i = 0; i < names.length; i++) {
+            putText(names[i], new Point(rects[i].x, rects[i].y + rects[i].height + 25));
         }
     }
 
     void writeToPathname(String path) {
         Imgcodecs.imwrite(path, picture);
         // System.out.println("Snapshot: " + path + " taken");
+    }
+
+    // compare: https://github.com/bytedeco/javacpp/issues/38
+    opencv_core.Mat convertToJavaCVMat() {
+        return new opencv_core.Mat() {
+            {
+                address = picture.getNativeObjAddr();
+            }
+        };
+
     }
 
     void importFrom(File pictureFile) {
