@@ -6,9 +6,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -54,10 +51,6 @@ public class FaceRecogApp extends JFrame {
     private VideoCapture capture = null;
     private int captureDevice;
 
-    private Map<String, Integer> nameFrequencies = new HashMap<String, Integer>();
-    private String[] last100Names = new String[100];
-    private int revolvingIndex = 0;
-
     // Main Methode
     public static void main(String[] args) {
         if (args.length > 0) {
@@ -68,20 +61,9 @@ public class FaceRecogApp extends JFrame {
         app.start();
     }
 
-    // Image Noise Reduction via Non Local Means Denoising [Optionale
-    // Optimierung]
-    /*
-     * To be implemented / Nice to have
-     */
-
-    // Image Normalization [Optionale Optimierung]
-    /*
-     * To be implemented / Nice to have
-     */
-
     public FaceRecogApp(String windowName) {
         super(windowName);
-        Arrays.fill(last100Names, "");
+        // capture device may be provided as a system property (e.g., -DCaptureDevive=1)
         setCaptureDevice(Integer.parseInt(System.getProperty("CaptureDevice", "0")));
     }
 
@@ -112,6 +94,7 @@ public class FaceRecogApp extends JFrame {
             }
 
         });
+        // initialize face recognition with pictures on training dir
         FaceRecog.retrain(trainingDir);
 
         // capture.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 640);
@@ -179,15 +162,29 @@ public class FaceRecogApp extends JFrame {
     private JPanel createDeviceRadioButtons() {
         JPanel buttonPanel = new JPanel();
         ButtonGroup bg = new ButtonGroup();
-        JRadioButton rb;
         ActionListener al = new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                setCaptureDevice(Integer.parseInt(event.getActionCommand()));
+                switch (event.getActionCommand()) {
+                case "Camera 0":
+                    setCaptureDevice(0);
+                    break;
+                case "Camera 1":
+                    setCaptureDevice(1);
+                    break;
+                case "Camera 2":
+                    setCaptureDevice(2);
+                    break;
+                default:
+                    System.out.println("unknown capture device");
+                }
             }
         };
+        String deviceName = "";
+        JRadioButton rb = null;
         for (int i = 0; i < 2; i++) {
-            rb = new JRadioButton("Camera " + i);
-            rb.setActionCommand(Integer.toString(i));
+            deviceName = "Camera " + i;
+            rb = new JRadioButton(deviceName);
+            rb.setActionCommand(deviceName);
             rb.addActionListener(al);
             bg.add(rb);
             if (captureDevice == i) {
@@ -208,46 +205,6 @@ public class FaceRecogApp extends JFrame {
         start();
     }
 
-    /**
-     * add an identified person's name to the data structures for computing the
-     * most frequent name among the last 100 recognized persons
-     * 
-     * @param addedName
-     */
-    private void addName(String addedName) {
-        String removedName = last100Names[revolvingIndex];
-
-        if (removedName != "" && nameFrequencies.containsKey(removedName)) {
-            nameFrequencies.put(removedName, nameFrequencies.get(removedName) - 1);
-        }
-        if (nameFrequencies.containsKey(addedName)) {
-            nameFrequencies.put(addedName, nameFrequencies.get(addedName) + 1);
-        } else {
-            nameFrequencies.put(addedName, new Integer(1));
-        }
-
-        last100Names[revolvingIndex++] = addedName;
-        revolvingIndex %= 100;
-
-    }
-
-    /**
-     * get the most frequent recognized person
-     * 
-     * @return
-     */
-    private String mostFrequentName() {
-        Integer maxValue = new Integer(0);
-        String maxName = "";
-        for (String name : nameFrequencies.keySet()) {
-            if (nameFrequencies.get(name).compareTo(maxValue) > 0) {
-                maxValue = nameFrequencies.get(name);
-                maxName = name;
-            }
-        }
-        return maxName;
-    }
-
     private void stop() {
         running = false;
     }
@@ -259,7 +216,6 @@ public class FaceRecogApp extends JFrame {
     private class FacRecogThread extends Thread {
         private MatOfRect faceDetections = null;
         private FacePicture[] faces = null;
-        private Prediction[] predictions = null;
 
         public void run() {
             running = true;
@@ -270,12 +226,7 @@ public class FaceRecogApp extends JFrame {
                         webcamImage.drawRectangles(faceDetections);
                         if (!faceDetections.empty() && check.isSelected()) {
                             faces = webcamImage.isolateFaces(faceDetections);
-                            predictions = FaceRecog.recognizeFaces(faces);
-                            if (predictions.length == 1) {
-                                addName(predictions[0].getName());
-                                predictions[0] = new Prediction(mostFrequentName(), predictions[0].getConfidence());
-                            }
-                            webcamImage.displayNames(predictions, faceDetections);
+                            webcamImage.displayNames(FaceRecog.recognizeFaces(faces), faceDetections);
                         }
                         webcamImage.drawToLabel(imageLabel);
                         repaint();
