@@ -85,7 +85,6 @@ public class FaceRecog {
         double[] confidence = new double[1];
 
         faceRecognizer.predict(face.convertToJavaCVMat(), prediction, confidence);
-        //System.out.println("Predict " + directories[prediction[0]].getName() + " with confidence " + confidence[0]);
         return new Prediction(directories[prediction[0]].getName(), confidence[0]);
     }
 

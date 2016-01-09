@@ -106,7 +106,7 @@ public class FacePicture {
         Rect[] rects = detections.toArray();
         for (int i = 0; i < preds.length; i++) {
             putText(preds[i].getName() + " " + (int) preds[i].getConfidence(),
-                        new Point(rects[i].x, rects[i].y + rects[i].height + 25));
+                    new Point(rects[i].x, rects[i].y + rects[i].height + 25));
         }
     }
 
@@ -115,7 +115,7 @@ public class FacePicture {
         // System.out.println("Snapshot: " + path + " taken");
     }
 
-    // compare: https://github.com/bytedeco/javacpp/issues/38
+    // see: https://github.com/bytedeco/javacpp/issues/38
     opencv_core.Mat convertToJavaCVMat() {
         return new opencv_core.Mat() {
             {
@@ -138,20 +138,21 @@ public class FacePicture {
         }
 
         // reject small pictures
-        // if (picture.width() < 500 || picture.height() < 500) {
-        // JOptionPane.showMessageDialog(null, "picture is too small");
-        // return;
-        // }
-
+/*        if (picture.width() < 500 || picture.height() < 500) {
+            JOptionPane.showMessageDialog(null, "picture is too small");
+            return;
+        }
+*/
         // scale file to fit appropriate size (500x500)
         double scale = Math.max(500.0 / picture.width(), 500.0 / picture.height());
         scaleImage(new Size(Math.max(500, scale * picture.width()), Math.max(500, scale * picture.height())));
 
         // cut file to a size of 500/500
-        // int xDiff = (picture.width() - 500) / 2;
-        // int yDiff = (picture.height() - 500) / 2;
-        // cropImage(new Rect(xDiff, yDiff, 500, 500));
-    }
+/*        int xDiff = (picture.width() - 500) / 2;
+        int yDiff = (picture.height() - 500) / 2;
+        cropImage(new Rect(xDiff, yDiff, 500, 500));
+*/ 
+        }
 
     MatOfRect detectFaces() {
         MatOfRect faceDetections = new MatOfRect();
