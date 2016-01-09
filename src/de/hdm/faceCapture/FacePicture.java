@@ -102,10 +102,11 @@ public class FacePicture {
         }
     }
 
-    void displayNames(String names[], MatOfRect detections) {
+    void displayNames(Prediction preds[], MatOfRect detections) {
         Rect[] rects = detections.toArray();
-        for (int i = 0; i < names.length; i++) {
-            putText(names[i], new Point(rects[i].x, rects[i].y + rects[i].height + 25));
+        for (int i = 0; i < preds.length; i++) {
+            putText(preds[i].getName() + " " + (int) preds[i].getConfidence(),
+                        new Point(rects[i].x, rects[i].y + rects[i].height + 25));
         }
     }
 

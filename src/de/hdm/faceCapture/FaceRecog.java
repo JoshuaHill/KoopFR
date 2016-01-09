@@ -80,12 +80,13 @@ public class FaceRecog {
     }
 
     // Recognition using direct conversion
-    public static String recognizeFace(FacePicture face) {
+    public static Prediction recognizeFace(FacePicture face) {
         int[] prediction = new int[1];
         double[] confidence = new double[1];
 
         faceRecognizer.predict(face.convertToJavaCVMat(), prediction, confidence);
-        return directories[prediction[0]].getName();
+        //System.out.println("Predict " + directories[prediction[0]].getName() + " with confidence " + confidence[0]);
+        return new Prediction(directories[prediction[0]].getName(), confidence[0]);
     }
 
     // Recognition using saved picture
@@ -112,8 +113,8 @@ public class FaceRecog {
         return null;
     }*/
 
-    public static String[] recognizeFaces(FacePicture[] faces) {
-        String[] names = new String[faces.length];
+    public static Prediction[] recognizeFaces(FacePicture[] faces) {
+        Prediction[] names = new Prediction[faces.length];
         for (int i = 0; i < faces.length; i++) {
             names[i] = recognizeFace(faces[i]);
         }

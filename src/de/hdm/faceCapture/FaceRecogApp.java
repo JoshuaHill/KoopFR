@@ -60,7 +60,7 @@ public class FaceRecogApp extends JFrame {
 
     // Main Methode
     public static void main(String[] args) {
-        if (args.length>0) {
+        if (args.length > 0) {
             trainingDir = args[0];
         }
         FaceRecogApp app = new FaceRecogApp("Face Recognizer");
@@ -97,14 +97,14 @@ public class FaceRecogApp extends JFrame {
         buttonPanel.add(createImportPictureButton());
         buttonPanel.add(check);
         buttonPanel.add(createDeviceRadioButtons());
-        
+
         add(buttonPanel, BorderLayout.SOUTH);
 
         addWindowListener(new WindowAdapter() {
 
             @Override
             public void windowClosing(WindowEvent we) {
-                running = false;
+                stop();
                 capture.release();
                 setVisible(false);
                 System.exit(DISPOSE_ON_CLOSE);
@@ -175,17 +175,17 @@ public class FaceRecogApp extends JFrame {
         });
         return pictureButton;
     }
-    
+
     private JPanel createDeviceRadioButtons() {
         JPanel buttonPanel = new JPanel();
         ButtonGroup bg = new ButtonGroup();
-        JRadioButton rb; 
-        ActionListener al = new ActionListener(){
-            public void actionPerformed(ActionEvent event){
+        JRadioButton rb;
+        ActionListener al = new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
                 setCaptureDevice(Integer.parseInt(event.getActionCommand()));
             }
         };
-        for (int i=0; i<2; i++){
+        for (int i = 0; i < 2; i++) {
             rb = new JRadioButton("Camera " + i);
             rb.setActionCommand(Integer.toString(i));
             rb.addActionListener(al);
@@ -197,10 +197,10 @@ public class FaceRecogApp extends JFrame {
         }
         return buttonPanel;
     }
-    
-    private void setCaptureDevice(int cd){
+
+    private void setCaptureDevice(int cd) {
         stop();
-        if (capture != null && capture instanceof VideoCapture){
+        if (capture != null && capture instanceof VideoCapture) {
             capture.release();
         }
         captureDevice = cd;
@@ -255,32 +255,37 @@ public class FaceRecogApp extends JFrame {
     private void start() {
         new FacRecogThread().start();
     }
-    
+
     private class FacRecogThread extends Thread {
         private MatOfRect faceDetections = null;
         private FacePicture[] faces = null;
-        private String names[] = null;
-        
+        private Prediction[] predictions = null;
+
         public void run() {
             running = true;
             while (running) {
-                if (webcamImage.capture(capture)) {
-                    faceDetections = webcamImage.detectFaces();
-                    webcamImage.drawRectangles(faceDetections);
-                    if (!faceDetections.empty() && check.isSelected()) {
-                        faces = webcamImage.isolateFaces(faceDetections);
-                        names = FaceRecog.recognizeFaces(faces);
-                        if (names.length==1){
-                            addName(names[0]);
-                            names[0]=mostFrequentName();
+                try {
+                    if (webcamImage.capture(capture)) {
+                        faceDetections = webcamImage.detectFaces();
+                        webcamImage.drawRectangles(faceDetections);
+                        if (!faceDetections.empty() && check.isSelected()) {
+                            faces = webcamImage.isolateFaces(faceDetections);
+                            predictions = FaceRecog.recognizeFaces(faces);
+                            if (predictions.length == 1) {
+                                addName(predictions[0].getName());
+                                predictions[0] = new Prediction(mostFrequentName(), predictions[0].getConfidence());
+                            }
+                            webcamImage.displayNames(predictions, faceDetections);
                         }
-                        webcamImage.displayNames(names, faceDetections);
+                        webcamImage.drawToLabel(imageLabel);
+                        repaint();
+                        sleep(200);
+                    } else {
+                        System.out.println(" -- Frame not captured -- Break!");
+                        break;
                     }
-                    webcamImage.drawToLabel(imageLabel);
-                    repaint();
-                } else {
-                    System.out.println(" -- Frame not captured -- Break!");
-                    break;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }
