@@ -104,15 +104,11 @@ public class FaceRecogApp extends JFrame {
         }
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                center();
+                pack();
+                setLocationRelativeTo(null);
+                setVisible(true);
             }
         });
-    }
-
-    private void center() {
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
     }
 
     // GUI: Take picture Button
@@ -222,6 +218,7 @@ public class FaceRecogApp extends JFrame {
             while (running) {
                 try {
                     if (webcamImage.capture(capture)) {
+                        sleep(100);
                         faceDetections = webcamImage.detectFaces();
                         webcamImage.drawRectangles(faceDetections);
                         if (!faceDetections.empty() && check.isSelected()) {
@@ -230,7 +227,6 @@ public class FaceRecogApp extends JFrame {
                         }
                         webcamImage.drawToLabel(imageLabel);
                         repaint();
-                        sleep(200);
                     } else {
                         System.out.println(" -- Frame not captured -- Break!");
                         break;
