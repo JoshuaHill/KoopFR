@@ -6,6 +6,7 @@ package de.hdm.faceCapture;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 
@@ -82,9 +83,43 @@ public class FacePicture {
     }
 
     void drawToLabel(JLabel imageLabel) {
-        imageLabel.setIcon(new ImageIcon(ImageProcessor.toBufferedImage(picture), "Captured video"));
+        imageLabel.setIcon(new ImageIcon(toBufferedImage(), "Captured video"));
         imageLabel.invalidate();
     }
+
+    // see:
+    // http://answers.opencv.org/question/46638/java-how-capture-webcam-and-show-it-in-a-jpanel-like-imshow/
+    BufferedImage toBufferedImage() {
+        // Mat() to BufferedImage
+        int type = 0;
+        if (picture.channels() == 1) {
+            type = BufferedImage.TYPE_BYTE_GRAY;
+        } else if (picture.channels() == 3) {
+            type = BufferedImage.TYPE_3BYTE_BGR;
+        }
+        BufferedImage image = new BufferedImage(picture.width(), picture.height(), type);
+        WritableRaster raster = image.getRaster();
+        DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
+        byte[] data = dataBuffer.getData();
+        picture.get(0, 0, data);
+
+        return image;
+    }
+
+    // alternative implementation using arrayCopy
+    /*BufferedImage toBufferedImage() {
+        int type = BufferedImage.TYPE_BYTE_GRAY;
+        if (picture.channels() > 1) {
+            type = BufferedImage.TYPE_3BYTE_BGR;
+        }
+        int bufferSize = picture.channels() * picture.cols() * picture.rows();
+        byte[] buffer = new byte[bufferSize];
+        picture.get(0, 0, buffer); // get all the pixels
+        BufferedImage image = new BufferedImage(picture.cols(), picture.rows(), type);
+        final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(buffer, 0, targetPixels, 0, buffer.length);
+        return image;
+    }*/
 
     void putText(String text) {
         Imgproc.putText(picture, text, new Point(20, 50), 2, 1, new Scalar(0, 0, 255));
@@ -138,21 +173,22 @@ public class FacePicture {
         }
 
         // reject small pictures
-/*        if (picture.width() < 500 || picture.height() < 500) {
-            JOptionPane.showMessageDialog(null, "picture is too small");
-            return;
-        }
-*/
+        /*
+         * if (picture.width() < 500 || picture.height() < 500) {
+         * JOptionPane.showMessageDialog(null, "picture is too small"); return;
+         * }
+         */
         // scale file to fit appropriate size (500x500)
         double scale = Math.max(500.0 / picture.width(), 500.0 / picture.height());
         scaleImage(new Size(Math.max(500, scale * picture.width()), Math.max(500, scale * picture.height())));
 
         // cut file to a size of 500/500
-/*        int xDiff = (picture.width() - 500) / 2;
-        int yDiff = (picture.height() - 500) / 2;
-        cropImage(new Rect(xDiff, yDiff, 500, 500));
-*/ 
-        }
+        /*
+         * int xDiff = (picture.width() - 500) / 2; int yDiff =
+         * (picture.height() - 500) / 2; cropImage(new Rect(xDiff, yDiff, 500,
+         * 500));
+         */
+    }
 
     MatOfRect detectFaces() {
         MatOfRect faceDetections = new MatOfRect();
