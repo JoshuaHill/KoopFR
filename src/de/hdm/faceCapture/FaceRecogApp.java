@@ -41,7 +41,7 @@ public class FaceRecogApp extends JFrame {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
-    private static String trainingDir = "media/";
+    private static String trainingDir = "faces/";
     private JLabel imageLabel = new JLabel();
     private FacePicture webcamImage = new FacePicture();
     private JCheckBox check = new JCheckBox("Face Recognition enabled", false);
@@ -152,6 +152,7 @@ public class FaceRecogApp extends JFrame {
                 start();
             }
         });
+        pictureButton.setTransferHandler(new PictureFileTransferHandler());
         return pictureButton;
     }
 
