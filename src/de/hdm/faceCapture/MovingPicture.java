@@ -14,18 +14,28 @@ public class MovingPicture extends JWindow {
      * 
      */
     private static final long serialVersionUID = 1L;
+    private int iterationsLeft = 1000;
     
     
-    public MovingPicture() {
+    public MovingPicture(String name) {
         JLabel label = new JLabel();
-        ImageIcon icon = new ImageIcon("C:/Users/Christian/Pictures/Kollegen/rathke.jpg");
+        ImageIcon icon = new ImageIcon("faces/" + name + "/profilePicture.jpg");
         label.setIcon(icon);
-        label.setText("<html><h1>Hallo Christian</h1></html>");
+        label.setText("<html><h1>Hallo " + name + "</h1></html>");
         label.setHorizontalTextPosition(SwingConstants.CENTER);
         label.setVerticalTextPosition(SwingConstants.BOTTOM);
         add(label);
         pack();
-        setVisible(true);
+
+        reset();
+    }
+    
+    void reset() {
+        iterationsLeft=1000;
+        if (!isVisible()) {
+            setVisible(true);
+            startMoving();
+        }
     }
     
     private void startMoving() {
@@ -36,8 +46,7 @@ public class MovingPicture extends JWindow {
         public void run() {
             int x = (int)(Math.random()*10)+1;
             int y = (int)(Math.random()*10)+1;
-            int iterations = 1000;
-            while (iterations-->0) {
+            while (iterationsLeft-->0) {
                 if (getX()<0 || getX() + getWidth() > 1920) {
                     x = -x;
                 }
@@ -58,8 +67,8 @@ public class MovingPicture extends JWindow {
     };
     
     public static void main(String[] args){
-        new MovingPicture().startMoving();
-        new MovingPicture().startMoving();
-        new MovingPicture().startMoving();
+        new MovingPicture("Christian Rathke");
+        new MovingPicture("Peter Thies");
+        new MovingPicture("Alexander Roos");
     }
 }

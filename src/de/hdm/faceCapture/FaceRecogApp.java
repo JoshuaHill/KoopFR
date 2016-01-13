@@ -6,6 +6,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -44,8 +46,11 @@ public class FaceRecogApp extends JFrame {
     private static String trainingDir = "faces/";
     private JLabel imageLabel = new JLabel();
     private FacePicture webcamImage = new FacePicture();
-    private JCheckBox check = new JCheckBox("Face Recognition enabled", false);
+    private JCheckBox displayNames = new JCheckBox("Names", false);
+    private JCheckBox movingPics = new JCheckBox("Moving Pics");
     private JFileChooser importFileChooser = null;
+
+    private Map<String, MovingPicture> movingPictures = new HashMap<String, MovingPicture>();
 
     private boolean running = false;
     private VideoCapture capture = null;
@@ -63,7 +68,8 @@ public class FaceRecogApp extends JFrame {
 
     public FaceRecogApp(String windowName) {
         super(windowName);
-        // capture device may be provided as a system property (e.g., -DCaptureDevive=1)
+        // capture device may be provided as a system property (e.g.,
+        // -DCaptureDevive=1)
         setCaptureDevice(Integer.parseInt(System.getProperty("CaptureDevice", "0")));
     }
 
@@ -77,7 +83,8 @@ public class FaceRecogApp extends JFrame {
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
         buttonPanel.add(createTakePictureButton());
         buttonPanel.add(createImportPictureButton());
-        buttonPanel.add(check);
+        buttonPanel.add(displayNames);
+        buttonPanel.add(movingPics);
         buttonPanel.add(createDeviceRadioButtons());
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -213,6 +220,7 @@ public class FaceRecogApp extends JFrame {
     private class FacRecogThread extends Thread {
         private MatOfRect faceDetections = null;
         private FacePicture[] faces = null;
+        private Prediction[] predictions = new Prediction[0];
 
         public void run() {
             running = true;
@@ -222,9 +230,21 @@ public class FaceRecogApp extends JFrame {
                         sleep(100);
                         faceDetections = webcamImage.detectFaces();
                         webcamImage.drawRectangles(faceDetections);
-                        if (!faceDetections.empty() && check.isSelected()) {
+                        if (!faceDetections.empty() && displayNames.isSelected() || movingPics.isSelected()) {
                             faces = webcamImage.isolateFaces(faceDetections);
-                            webcamImage.displayNames(FaceRecog.recognizeFaces(faces), faceDetections);
+                            predictions = FaceRecog.recognizeFaces(faces);
+                            if (displayNames.isSelected()) {
+                                webcamImage.displayNames(predictions, faceDetections);
+                            }
+                            if (movingPics.isSelected()) {
+                                for (Prediction pred : predictions) {
+                                    if (movingPictures.containsKey(pred.name)) {
+                                        movingPictures.get(pred.name).reset();
+                                    } else {
+                                        movingPictures.put(pred.name, new MovingPicture(pred.name));
+                                    }
+                                }
+                            }
                         }
                         webcamImage.drawToLabel(imageLabel);
                         repaint();
