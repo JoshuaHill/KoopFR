@@ -57,26 +57,26 @@ public class FacePicture {
     }
 
     // Image Scaling
-    private void scaleImage(Size size) {
+    void scaleImage(Size size) {
         Mat snapshotScaled = new Mat();
         Imgproc.resize(picture, snapshotScaled, size);
         picture = snapshotScaled;
     }
 
     // Image cropping
-    private void cropImage(Rect rect) {
+    void cropImage(Rect rect) {
         picture = new Mat(picture, rect);
     }
 
     // Image Noise Reduction via Blur
-    private void blurImage(Size size) {
+    void blurImage(Size size) {
         Mat snapshotBlurred = new Mat();
         Imgproc.blur(picture, snapshotBlurred, size);
         picture = snapshotBlurred;
     }
 
     // make it gray
-    private void grayImage() {
+    void grayImage() {
         Mat grayImage = new Mat();
         Imgproc.cvtColor(picture, grayImage, Imgproc.COLOR_BGR2GRAY);
         picture = grayImage;

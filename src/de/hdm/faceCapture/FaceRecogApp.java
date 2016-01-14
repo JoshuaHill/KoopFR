@@ -238,10 +238,11 @@ public class FaceRecogApp extends JFrame {
                             }
                             if (movingPics.isSelected()) {
                                 for (Prediction pred : predictions) {
-                                    if (movingPictures.containsKey(pred.name)) {
-                                        movingPictures.get(pred.name).reset();
+                                    if (pred.getConfidence()>110) continue;
+                                    if (movingPictures.containsKey(pred.getName())) {
+                                        movingPictures.get(pred.getName()).reset();
                                     } else {
-                                        movingPictures.put(pred.name, new MovingPicture(pred.name));
+                                        movingPictures.put(pred.getName(), new MovingPicture(pred.getName()));
                                     }
                                 }
                             }

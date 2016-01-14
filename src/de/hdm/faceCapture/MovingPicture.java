@@ -21,7 +21,7 @@ public class MovingPicture extends JWindow {
         JLabel label = new JLabel();
         ImageIcon icon = new ImageIcon("faces/" + name + "/profilePicture.jpg");
         label.setIcon(icon);
-        label.setText("<html><h1>Hallo " + name + "</h1></html>");
+        label.setText("<html><h3>Hallo " + name + "</h3></html>");
         label.setHorizontalTextPosition(SwingConstants.CENTER);
         label.setVerticalTextPosition(SwingConstants.BOTTOM);
         add(label);
