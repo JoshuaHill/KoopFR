@@ -4,6 +4,8 @@
  */
 package de.hdm.faceCapture;
 
+import java.awt.Toolkit;
+
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JWindow;
@@ -15,6 +17,8 @@ public class MovingPicture extends JWindow {
      */
     private static final long serialVersionUID = 1L;
     private int iterationsLeft = 1000;
+    private static int screenWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
+    private static int screenHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
     
     
     public MovingPicture(String name) {
@@ -47,10 +51,10 @@ public class MovingPicture extends JWindow {
             int x = (int)(Math.random()*10)+1;
             int y = (int)(Math.random()*10)+1;
             while (iterationsLeft-->0) {
-                if (getX()<0 || getX() + getWidth() > 1920) {
+                if (getX()<0 || getX() + getWidth() > screenWidth) {
                     x = -x;
                 }
-                if (getY()<0 || getY() + getHeight() > 1200) {
+                if (getY()<0 || getY() + getHeight() > screenHeight) {
                     y = -y;
                 }
                 setLocation(getX()+x, getY()+y);

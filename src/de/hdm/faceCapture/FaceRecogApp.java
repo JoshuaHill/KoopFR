@@ -238,6 +238,7 @@ public class FaceRecogApp extends JFrame {
                             }
                             if (movingPics.isSelected()) {
                                 for (Prediction pred : predictions) {
+                                    // recognition distance must not be greater than 110
                                     if (pred.getConfidence()>110) continue;
                                     if (movingPictures.containsKey(pred.getName())) {
                                         movingPictures.get(pred.getName()).reset();
