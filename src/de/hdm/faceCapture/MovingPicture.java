@@ -4,6 +4,8 @@
  */
 package de.hdm.faceCapture;
 
+import java.awt.Toolkit;
+
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JWindow;
@@ -15,13 +17,15 @@ public class MovingPicture extends JWindow {
      */
     private static final long serialVersionUID = 1L;
     private int iterationsLeft = 1000;
+    private static int screenWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
+    private static int screenHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
     
     
     public MovingPicture(String name) {
         JLabel label = new JLabel();
         ImageIcon icon = new ImageIcon("faces/" + name + "/profilePicture.jpg");
         label.setIcon(icon);
-        label.setText("<html><h1>Hallo " + name + "</h1></html>");
+        label.setText("<html><h3>Hallo " + name + "</h3></html>");
         label.setHorizontalTextPosition(SwingConstants.CENTER);
         label.setVerticalTextPosition(SwingConstants.BOTTOM);
         add(label);
@@ -47,10 +51,10 @@ public class MovingPicture extends JWindow {
             int x = (int)(Math.random()*10)+1;
             int y = (int)(Math.random()*10)+1;
             while (iterationsLeft-->0) {
-                if (getX()<0 || getX() + getWidth() > 1920) {
+                if (getX()<0 || getX() + getWidth() > screenWidth) {
                     x = -x;
                 }
-                if (getY()<0 || getY() + getHeight() > 1200) {
+                if (getY()<0 || getY() + getHeight() > screenHeight) {
                     y = -y;
                 }
                 setLocation(getX()+x, getY()+y);

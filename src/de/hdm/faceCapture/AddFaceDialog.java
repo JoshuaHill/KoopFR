@@ -5,6 +5,8 @@
 package de.hdm.faceCapture;
 
 import java.awt.BorderLayout;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -28,7 +30,7 @@ public class AddFaceDialog extends JDialog {
      */
     private static final long serialVersionUID = 1L;
     private JLabel imageLabel = new JLabel();
-    JCheckBox saveAsProfile = new JCheckBox("Save as profile picture", false);
+    private JCheckBox saveAsProfile = new JCheckBox("Save as profile picture", false);
     private FacePicture candidate;
     private JFileChooser pictureDirChooser = null;
 
@@ -60,17 +62,12 @@ public class AddFaceDialog extends JDialog {
                     pictureDirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                     pictureDirChooser.setCurrentDirectory(mediaDir);
                 }
-                int returnVal = pictureDirChooser.showOpenDialog(null);
+                int returnVal = pictureDirChooser.showDialog(AddFaceDialog.this, "Select face directory");
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File selectedDir = pictureDirChooser.getSelectedFile();
                     if (saveAsProfile.isSelected()) {
-                        BufferedImage image = candidate.toBufferedImage();
-                        try {
-                            ImageIO.write(image, "jpg", new File(selectedDir.getPath() + "/profilePicture.jpg"));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        saveAsProfileImage(selectedDir);
                     }
                     String path = createPictureFilePathName(selectedDir);
                     candidate.isolateFace(rect).writeToPathname(path);
@@ -98,7 +95,7 @@ public class AddFaceDialog extends JDialog {
         candidate.drawToLabel(imageLabel);
         JPanel controlsPanel = new JPanel();
         add(controlsPanel, BorderLayout.SOUTH);
-        
+
         if (candidate != null) {
             MatOfRect rects = candidate.detectFaces();
 
@@ -109,7 +106,7 @@ public class AddFaceDialog extends JDialog {
                 JButton saveFacesButton = new JButton("Save faces");
                 saveFacesButton.addActionListener(new saveFacesButtonActionListener(rects));
                 controlsPanel.add(saveFacesButton);
-                if (rects.rows()==1) {
+                if (rects.rows() == 1) {
                     saveFacesButton.setText("Save face");
                     saveAsProfile.setSelected(true);
                     controlsPanel.add(saveAsProfile);
@@ -118,7 +115,7 @@ public class AddFaceDialog extends JDialog {
             } else {
                 JButton quitButton = new JButton("No faces detected. Close Window.");
                 quitButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent event){
+                    public void actionPerformed(ActionEvent event) {
                         setVisible(false);
                         dispose();
                     }
@@ -139,5 +136,24 @@ public class AddFaceDialog extends JDialog {
             counter++;
         }
         return file.getPath();
+    }
+    
+    private void saveAsProfileImage(File directory) {
+        BufferedImage bimage = candidate.toBufferedImage();
+        Image img = bimage.getScaledInstance(-1, 300, BufferedImage.SCALE_DEFAULT);
+        // Create a new buffered image with transparency
+        bimage = new BufferedImage(img.getWidth(null), img.getHeight(null),
+                BufferedImage.TYPE_INT_ARGB);
+        // Draw the scaled image on to the buffered image
+        Graphics2D bGr = bimage.createGraphics();
+        bGr.drawImage(img, 0, 0, null);
+        bGr.dispose();
+
+        try {
+            ImageIO.write(bimage, "jpg", new File(directory.getPath() + "/profilePicture.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
     }
 }

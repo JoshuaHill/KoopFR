@@ -5,8 +5,8 @@
 package de.hdm.faceCapture;
 
 public class Prediction {
-    String name;
-    double confidence;
+    private String name;
+    private double confidence;
     
     Prediction(String n, double c){
         name = n;

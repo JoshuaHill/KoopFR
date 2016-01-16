@@ -143,6 +143,7 @@ public class FaceRecogApp extends JFrame {
                     FileNameExtensionFilter filter = new FileNameExtensionFilter("Images", "jpg", "jpeg", "gif", "png");
                     importFileChooser.setAcceptAllFileFilterUsed(false);
                     importFileChooser.setFileFilter(filter);
+                    importFileChooser.setAccessory(new ImagePreview(importFileChooser));
                     importFileChooser.setCurrentDirectory(new File(System.getProperty("user.home") + "/Pictures"));
                 }
                 int returnVal = importFileChooser.showOpenDialog(null);
@@ -229,7 +230,6 @@ public class FaceRecogApp extends JFrame {
                     if (webcamImage.capture(capture)) {
                         sleep(100);
                         faceDetections = webcamImage.detectFaces();
-                        webcamImage.drawRectangles(faceDetections);
                         if (!faceDetections.empty() && displayNames.isSelected() || movingPics.isSelected()) {
                             faces = webcamImage.isolateFaces(faceDetections);
                             predictions = FaceRecog.recognizeFaces(faces);
@@ -238,14 +238,17 @@ public class FaceRecogApp extends JFrame {
                             }
                             if (movingPics.isSelected()) {
                                 for (Prediction pred : predictions) {
-                                    if (movingPictures.containsKey(pred.name)) {
-                                        movingPictures.get(pred.name).reset();
+                                    // recognition distance must not be greater than 110
+                                    if (pred.getConfidence()>110) continue;
+                                    if (movingPictures.containsKey(pred.getName())) {
+                                        movingPictures.get(pred.getName()).reset();
                                     } else {
-                                        movingPictures.put(pred.name, new MovingPicture(pred.name));
+                                        movingPictures.put(pred.getName(), new MovingPicture(pred.getName()));
                                     }
                                 }
                             }
                         }
+                        webcamImage.drawRectangles(faceDetections);
                         webcamImage.drawToLabel(imageLabel);
                         repaint();
                     } else {

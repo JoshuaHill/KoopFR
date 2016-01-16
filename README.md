@@ -7,9 +7,9 @@ Instructions
     	include native library (e.g., opencv/build/java/x64) in the java native library path
     - Download and install JavaCV from https://github.com/bytedeco/javacv
     
-    - the database of known faces is below media/
+    - the database of known faces is below faces/
     - the collection of example pictures for a person is in a subdirectory with the person's name,
-    e.g. media/Christian Rathke/image-0.png, media/Christian Rathke/image-1.png, ...
+    e.g. faces/Christian Rathke/image-0.png, faces/Christian Rathke/image-1.png, ...
     
 2. Operation
 	- run "java 'args' de.hdm.faceCapture.FaceRecogApp" on the command line replacing 'args' by
