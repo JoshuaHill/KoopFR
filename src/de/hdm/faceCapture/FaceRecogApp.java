@@ -143,6 +143,7 @@ public class FaceRecogApp extends JFrame {
                     FileNameExtensionFilter filter = new FileNameExtensionFilter("Images", "jpg", "jpeg", "gif", "png");
                     importFileChooser.setAcceptAllFileFilterUsed(false);
                     importFileChooser.setFileFilter(filter);
+                    importFileChooser.setAccessory(new ImagePreview(importFileChooser));
                     importFileChooser.setCurrentDirectory(new File(System.getProperty("user.home") + "/Pictures"));
                 }
                 int returnVal = importFileChooser.showOpenDialog(null);
@@ -229,7 +230,6 @@ public class FaceRecogApp extends JFrame {
                     if (webcamImage.capture(capture)) {
                         sleep(100);
                         faceDetections = webcamImage.detectFaces();
-                        webcamImage.drawRectangles(faceDetections);
                         if (!faceDetections.empty() && displayNames.isSelected() || movingPics.isSelected()) {
                             faces = webcamImage.isolateFaces(faceDetections);
                             predictions = FaceRecog.recognizeFaces(faces);
@@ -248,6 +248,7 @@ public class FaceRecogApp extends JFrame {
                                 }
                             }
                         }
+                        webcamImage.drawRectangles(faceDetections);
                         webcamImage.drawToLabel(imageLabel);
                         repaint();
                     } else {

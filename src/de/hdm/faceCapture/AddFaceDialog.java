@@ -62,7 +62,7 @@ public class AddFaceDialog extends JDialog {
                     pictureDirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                     pictureDirChooser.setCurrentDirectory(mediaDir);
                 }
-                int returnVal = pictureDirChooser.showOpenDialog(null);
+                int returnVal = pictureDirChooser.showDialog(AddFaceDialog.this, "Select face directory");
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File selectedDir = pictureDirChooser.getSelectedFile();
