@@ -42,6 +42,10 @@ public class MovingPicture extends JWindow {
         }
     }
     
+    void terminate() {
+        iterationsLeft=0;
+    }
+    
     private void startMoving() {
         new moving().start();        
     }

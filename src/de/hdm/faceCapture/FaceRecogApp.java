@@ -85,6 +85,15 @@ public class FaceRecogApp extends JFrame {
         buttonPanel.add(createImportPictureButton());
         buttonPanel.add(displayNames);
         buttonPanel.add(movingPics);
+        movingPics.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event){
+                if (!movingPics.isSelected()) {
+                    for (MovingPicture mp : movingPictures.values()){
+                        mp.terminate();
+                    }
+                }
+            }
+        });
         buttonPanel.add(createDeviceRadioButtons());
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -153,7 +162,7 @@ public class FaceRecogApp extends JFrame {
                     fp.importFrom(importFileChooser.getSelectedFile());
 
                     // just for checks write modified picture to picture dir
-                    // fp.writeToPathname(createPictureFilePathName(pictureDir));
+                    //fp.writeToPathname(System.getProperty("user.home") + "/Desktop/test.png");
 
                     new AddFaceDialog(fp);
                 }

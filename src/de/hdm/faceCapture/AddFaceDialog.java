@@ -67,7 +67,7 @@ public class AddFaceDialog extends JDialog {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File selectedDir = pictureDirChooser.getSelectedFile();
                     if (saveAsProfile.isSelected()) {
-                        saveAsProfileImage(selectedDir);
+                        saveAsProfileImage(selectedDir, rect);
                     }
                     String path = createPictureFilePathName(selectedDir);
                     candidate.isolateFace(rect).writeToPathname(path);
@@ -137,13 +137,19 @@ public class AddFaceDialog extends JDialog {
         }
         return file.getPath();
     }
-    
-    private void saveAsProfileImage(File directory) {
-        BufferedImage bimage = candidate.toBufferedImage();
-        Image img = bimage.getScaledInstance(-1, 300, BufferedImage.SCALE_DEFAULT);
-        // Create a new buffered image with transparency
-        bimage = new BufferedImage(img.getWidth(null), img.getHeight(null),
-                BufferedImage.TYPE_INT_ARGB);
+
+    private void saveAsProfileImage(File directory, Rect rect) {
+        int deltaWidth = rect.width / 4;
+        int deltaHeight = rect.height / 3;
+        FacePicture fp = new FacePicture(candidate);
+        fp.cropImage(rect.x - deltaWidth, rect.y - deltaHeight, rect.width + 2 * deltaWidth,
+                rect.height + 2 * deltaHeight);
+        
+        BufferedImage bimage = fp.toBufferedImage();
+        // scale image to 300 pixels in height
+        Image img = bimage.getScaledInstance(-1, 300, BufferedImage.SCALE_DEFAULT);        
+        // Create an empty buffered image with appropriate size and type        
+        bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), bimage.getType());
         // Draw the scaled image on to the buffered image
         Graphics2D bGr = bimage.createGraphics();
         bGr.drawImage(img, 0, 0, null);
@@ -154,6 +160,6 @@ public class AddFaceDialog extends JDialog {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
     }
 }

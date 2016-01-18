@@ -65,7 +65,15 @@ public class FacePicture {
 
     // Image cropping
     void cropImage(Rect rect) {
-        picture = new Mat(picture, rect);
+        cropImage(rect.x, rect.y, rect.width, rect.height);
+    }
+
+    void cropImage(int x, int y, int width, int height) {
+        x = Math.max(x, 0);
+        y = Math.max(y, 0);
+        width = Math.min(width, picture.width() - x);
+        height = Math.min(height, picture.height() - y);
+        picture = new Mat(picture, new Rect(x, y, width, height));
     }
 
     // Image Noise Reduction via Blur
@@ -89,37 +97,31 @@ public class FacePicture {
 
     // see:
     // http://answers.opencv.org/question/46638/java-how-capture-webcam-and-show-it-in-a-jpanel-like-imshow/
+    // Mat() to BufferedImage
     BufferedImage toBufferedImage() {
-        // Mat() to BufferedImage
-        int type = 0;
-        if (picture.channels() == 1) {
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        } else if (picture.channels() == 3) {
-            type = BufferedImage.TYPE_3BYTE_BGR;
-        }
-        BufferedImage image = new BufferedImage(picture.width(), picture.height(), type);
-        WritableRaster raster = image.getRaster();
-        DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
-        byte[] data = dataBuffer.getData();
-        picture.get(0, 0, data);
-
-        return image;
-    }
-
-    // alternative implementation using arrayCopy
-    /*BufferedImage toBufferedImage() {
         int type = BufferedImage.TYPE_BYTE_GRAY;
         if (picture.channels() > 1) {
             type = BufferedImage.TYPE_3BYTE_BGR;
         }
-        int bufferSize = picture.channels() * picture.cols() * picture.rows();
-        byte[] buffer = new byte[bufferSize];
-        picture.get(0, 0, buffer); // get all the pixels
-        BufferedImage image = new BufferedImage(picture.cols(), picture.rows(), type);
-        final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-        System.arraycopy(buffer, 0, targetPixels, 0, buffer.length);
+        
+        BufferedImage image = new BufferedImage(picture.width(), picture.height(), type);
+        WritableRaster raster = image.getRaster();
+        DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
+        byte[] data = dataBuffer.getData();
+        
+        picture.get(0, 0, data);
+
         return image;
-    }*/
+    }
+    
+    void toMat(BufferedImage image) {
+        WritableRaster raster = image.getRaster();
+        DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
+        byte[] data = dataBuffer.getData();
+        
+        picture = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
+        picture.put(0, 0, data);
+    }
 
     void putText(String text) {
         Imgproc.putText(picture, text, new Point(20, 50), 2, 1, new Scalar(0, 0, 255));
@@ -164,30 +166,14 @@ public class FacePicture {
 
         // read file into Mat
         try {
-            BufferedImage image = ImageIO.read(pictureFile);
-            byte[] data = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-            picture = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
-            picture.put(0, 0, data);
+            toMat(ImageIO.read(pictureFile));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        // reject small pictures
-        /*
-         * if (picture.width() < 500 || picture.height() < 500) {
-         * JOptionPane.showMessageDialog(null, "picture is too small"); return;
-         * }
-         */
+        
         // scale file to fit appropriate size (500x500)
         double scale = Math.max(500.0 / picture.width(), 500.0 / picture.height());
         scaleImage(new Size(Math.max(500, scale * picture.width()), Math.max(500, scale * picture.height())));
-
-        // cut file to a size of 500/500
-        /*
-         * int xDiff = (picture.width() - 500) / 2; int yDiff =
-         * (picture.height() - 500) / 2; cropImage(new Rect(xDiff, yDiff, 500,
-         * 500));
-         */
     }
 
     MatOfRect detectFaces() {
