@@ -26,7 +26,8 @@ public class FaceRecog {
     private static FaceRecognizer faceRecognizer =
     // org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer();
     // org.bytedeco.javacpp.opencv_face.createEigenFaceRecognizer();
-    org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer();
+    //org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer();
+            org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer(2, 8, 8, 8, 200.0);
     private static FilenameFilter imgFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
             name = name.toLowerCase();
@@ -85,7 +86,11 @@ public class FaceRecog {
         double[] confidence = new double[1];
 
         faceRecognizer.predict(face.convertToJavaCVMat(), prediction, confidence);
-        return new Prediction(directories[prediction[0]].getName(), confidence[0]);
+        if (prediction[0]==-1) {
+            return null;
+        } else {
+            return new Prediction(directories[prediction[0]], confidence[0]);
+        }
     }
 
     // Recognition using saved picture
@@ -113,11 +118,11 @@ public class FaceRecog {
     }*/
 
     public static Prediction[] recognizeFaces(FacePicture[] faces) {
-        Prediction[] names = new Prediction[faces.length];
+        Prediction[] preds = new Prediction[faces.length];
         for (int i = 0; i < faces.length; i++) {
-            names[i] = recognizeFace(faces[i]);
+            preds[i] = recognizeFace(faces[i]);
         }
-        return names;
+        return preds;
     }
 
 }
