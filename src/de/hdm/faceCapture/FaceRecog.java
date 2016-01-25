@@ -26,7 +26,8 @@ public class FaceRecog {
     private static FaceRecognizer faceRecognizer =
     // org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer();
     // org.bytedeco.javacpp.opencv_face.createEigenFaceRecognizer();
-    org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer();
+    //org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer();
+            org.bytedeco.javacpp.opencv_face.createLBPHFaceRecognizer(2, 8, 8, 8, 200.0);
     private static FilenameFilter imgFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
             name = name.toLowerCase();
@@ -41,7 +42,7 @@ public class FaceRecog {
             mediaDir.mkdirs();
         }
         directories = mediaDir.listFiles();
-        System.out.println("(Re)train using " + directories.length + " media directories in " + mediaDir.getPath());
+        System.out.print("(Re)train using " + directories.length + " media directories in " + mediaDir.getPath());
 
         // collect and count all image files in all media directories
         File[][] files = new File[directories.length][];
@@ -57,8 +58,10 @@ public class FaceRecog {
         }
 
         if (fileCount == 0) {
-            System.out.println("no media files to train recognizer with");
+            System.out.println(" where no media files to train the recognizer with have been found.");
             return;
+        } else {
+            System.out.println(" with a total of " + fileCount + " face files.");
         }
 
         // train the recognizer with all files found
@@ -85,7 +88,11 @@ public class FaceRecog {
         double[] confidence = new double[1];
 
         faceRecognizer.predict(face.convertToJavaCVMat(), prediction, confidence);
-        return new Prediction(directories[prediction[0]].getName(), confidence[0]);
+        if (prediction[0]==-1) {
+            return null;
+        } else {
+            return new Prediction(directories[prediction[0]], confidence[0]);
+        }
     }
 
     // Recognition using saved picture
@@ -113,11 +120,11 @@ public class FaceRecog {
     }*/
 
     public static Prediction[] recognizeFaces(FacePicture[] faces) {
-        Prediction[] names = new Prediction[faces.length];
+        Prediction[] preds = new Prediction[faces.length];
         for (int i = 0; i < faces.length; i++) {
-            names[i] = recognizeFace(faces[i]);
+            preds[i] = recognizeFace(faces[i]);
         }
-        return names;
+        return preds;
     }
 
 }

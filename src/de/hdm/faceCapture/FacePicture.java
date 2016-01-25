@@ -4,6 +4,9 @@
  */
 package de.hdm.faceCapture;
 
+import java.awt.BorderLayout;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
@@ -12,6 +15,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import org.bytedeco.javacpp.opencv_core;
@@ -57,6 +62,10 @@ public class FacePicture {
     }
 
     // Image Scaling
+    void scaleImage(double factor) {
+        scaleImage(new Size(picture.width()*factor, picture.height()*factor));
+    }
+    
     void scaleImage(Size size) {
         Mat snapshotScaled = new Mat();
         Imgproc.resize(picture, snapshotScaled, size);
@@ -65,7 +74,15 @@ public class FacePicture {
 
     // Image cropping
     void cropImage(Rect rect) {
-        picture = new Mat(picture, rect);
+        cropImage(rect.x, rect.y, rect.width, rect.height);
+    }
+
+    void cropImage(int x, int y, int width, int height) {
+        x = Math.max(x, 0);
+        y = Math.max(y, 0);
+        width = Math.min(width, picture.width() - x);
+        height = Math.min(height, picture.height() - y);
+        picture = new Mat(picture, new Rect(x, y, width, height));
     }
 
     // Image Noise Reduction via Blur
@@ -78,8 +95,10 @@ public class FacePicture {
     // make it gray
     void grayImage() {
         Mat grayImage = new Mat();
-        Imgproc.cvtColor(picture, grayImage, Imgproc.COLOR_BGR2GRAY);
-        picture = grayImage;
+        if (picture.channels()>1) {
+            Imgproc.cvtColor(picture, grayImage, Imgproc.COLOR_BGR2GRAY);
+            picture = grayImage;
+        }
     }
 
     void drawToLabel(JLabel imageLabel) {
@@ -87,39 +106,48 @@ public class FacePicture {
         imageLabel.invalidate();
     }
 
+    void importFrom(File pictureFile) {
+
+        // read file into Mat
+        try {
+            toMat(ImageIO.read(pictureFile));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // scale file to fit appropriate size (500x500)
+        double scale = Math.max(500.0 / picture.width(), 500.0 / picture.height());
+        scaleImage(new Size(Math.max(500, scale * picture.width()), Math.max(500, scale * picture.height())));
+    }
+
     // see:
     // http://answers.opencv.org/question/46638/java-how-capture-webcam-and-show-it-in-a-jpanel-like-imshow/
+    // Mat() to BufferedImage
     BufferedImage toBufferedImage() {
-        // Mat() to BufferedImage
-        int type = 0;
-        if (picture.channels() == 1) {
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        } else if (picture.channels() == 3) {
+        int type = BufferedImage.TYPE_BYTE_GRAY;
+        if (picture.channels() > 1) {
             type = BufferedImage.TYPE_3BYTE_BGR;
         }
+
         BufferedImage image = new BufferedImage(picture.width(), picture.height(), type);
         WritableRaster raster = image.getRaster();
         DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
         byte[] data = dataBuffer.getData();
+
         picture.get(0, 0, data);
 
         return image;
     }
 
-    // alternative implementation using arrayCopy
-    /*BufferedImage toBufferedImage() {
-        int type = BufferedImage.TYPE_BYTE_GRAY;
-        if (picture.channels() > 1) {
-            type = BufferedImage.TYPE_3BYTE_BGR;
-        }
-        int bufferSize = picture.channels() * picture.cols() * picture.rows();
-        byte[] buffer = new byte[bufferSize];
-        picture.get(0, 0, buffer); // get all the pixels
-        BufferedImage image = new BufferedImage(picture.cols(), picture.rows(), type);
-        final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-        System.arraycopy(buffer, 0, targetPixels, 0, buffer.length);
-        return image;
-    }*/
+    void toMat(BufferedImage image) {
+        WritableRaster raster = image.getRaster();
+        DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
+        byte[] data = dataBuffer.getData();
+
+        picture = new Mat(image.getHeight(), image.getWidth(),
+                image.getType() == BufferedImage.TYPE_BYTE_GRAY ? CvType.CV_8U : CvType.CV_8UC3);
+        picture.put(0, 0, data);
+    }
 
     void putText(String text) {
         Imgproc.putText(picture, text, new Point(20, 50), 2, 1, new Scalar(0, 0, 255));
@@ -140,9 +168,66 @@ public class FacePicture {
     void displayNames(Prediction preds[], MatOfRect detections) {
         Rect[] rects = detections.toArray();
         for (int i = 0; i < preds.length; i++) {
-            putText(preds[i].getName() + " " + (int) preds[i].getConfidence(),
-                    new Point(rects[i].x, rects[i].y + rects[i].height + 25));
+            if (preds[i] != null) {
+                putText(preds[i].getName() + " " + (int) preds[i].getConfidence(),
+                        new Point(rects[i].x, rects[i].y + rects[i].height + 25));
+            }
         }
+    }
+
+    FacePicture createProfileImage(Rect rect) {
+        int deltaWidth = rect.width / 4;
+        int deltaHeight = rect.height / 3;
+        FacePicture fp = new FacePicture(this);
+        fp.cropImage(rect.x - deltaWidth, rect.y - deltaHeight, rect.width + 2 * deltaWidth,
+                rect.height + 2 * deltaHeight);
+        return fp;
+    }
+
+    void saveAsProfileImage(File directory) {
+
+        BufferedImage bimage = toBufferedImage();
+        // scale image to 300 pixels in height
+        Image img = bimage.getScaledInstance(-1, 300, BufferedImage.SCALE_DEFAULT);
+        // Create an empty buffered image with appropriate size and type
+        bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), bimage.getType());
+        // Draw the scaled image on to the buffered image
+        Graphics2D bGr = bimage.createGraphics();
+        bGr.drawImage(img, 0, 0, null);
+        bGr.dispose();
+
+        try {
+            ImageIO.write(bimage, "jpg", new File(directory.getPath() + "/profilePicture.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    void showLookAlikePicture(Prediction pred, Rect rect) {
+        JFrame lookAlikeWindow = new JFrame();
+
+        JButton heading = new JButton("<html><body><h1>OMG: You look just like " + pred.getName() + "!</h1></body></html>");
+        lookAlikeWindow.add(heading, BorderLayout.PAGE_START);
+
+        JLabel snapShotLabel = new JLabel();
+        FacePicture snapShot = createProfileImage(rect);
+        snapShot.scaleImage(2.0);
+        snapShot.drawToLabel(snapShotLabel);
+        lookAlikeWindow.add(snapShotLabel, BorderLayout.LINE_END);
+
+        File profileFile = pred.getProfilePictureFile();
+        if (profileFile != null) {
+            JLabel profileLabel = new JLabel();
+            Image scaledImage = new ImageIcon(profileFile.getPath()).getImage().getScaledInstance(-1,
+                    snapShotLabel.getIcon().getIconHeight(), Image.SCALE_DEFAULT);
+            profileLabel.setIcon(new ImageIcon(scaledImage));
+            lookAlikeWindow.add(profileLabel, BorderLayout.LINE_START);
+        }
+
+        lookAlikeWindow.pack();
+        lookAlikeWindow.setLocationRelativeTo(null);
+        lookAlikeWindow.setVisible(true);
     }
 
     void writeToPathname(String path) {
@@ -158,36 +243,6 @@ public class FacePicture {
             }
         };
 
-    }
-
-    void importFrom(File pictureFile) {
-
-        // read file into Mat
-        try {
-            BufferedImage image = ImageIO.read(pictureFile);
-            byte[] data = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-            picture = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
-            picture.put(0, 0, data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // reject small pictures
-        /*
-         * if (picture.width() < 500 || picture.height() < 500) {
-         * JOptionPane.showMessageDialog(null, "picture is too small"); return;
-         * }
-         */
-        // scale file to fit appropriate size (500x500)
-        double scale = Math.max(500.0 / picture.width(), 500.0 / picture.height());
-        scaleImage(new Size(Math.max(500, scale * picture.width()), Math.max(500, scale * picture.height())));
-
-        // cut file to a size of 500/500
-        /*
-         * int xDiff = (picture.width() - 500) / 2; int yDiff =
-         * (picture.height() - 500) / 2; cropImage(new Rect(xDiff, yDiff, 500,
-         * 500));
-         */
     }
 
     MatOfRect detectFaces() {
@@ -223,6 +278,10 @@ public class FacePicture {
         // Crop, blur, resize and gray Image
         FacePicture fp = new FacePicture(picture);
         fp.cropImage(rect);
+        if (rect.height > 150){
+            double scaleFactor = 150.0 / rect.height;
+            fp.scaleImage(new Size(rect.width*scaleFactor, rect.height*scaleFactor));
+        }
         fp.blurImage(new Size(3.0, 3.0));
         fp.scaleImage(new Size(75, 75));
         fp.grayImage();

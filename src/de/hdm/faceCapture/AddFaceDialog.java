@@ -5,15 +5,10 @@
 package de.hdm.faceCapture;
 
 import java.awt.BorderLayout;
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 
-import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -30,9 +25,9 @@ public class AddFaceDialog extends JDialog {
      */
     private static final long serialVersionUID = 1L;
     private JLabel imageLabel = new JLabel();
-    private JCheckBox saveAsProfile = new JCheckBox("Save as profile picture", false);
+    private JCheckBox alsoSaveAsProfile = new JCheckBox("Also save as profile picture", false);
     private FacePicture candidate;
-    private JFileChooser pictureDirChooser = null;
+    private static JFileChooser pictureDirChooser = null;
 
     private class saveFacesButtonActionListener implements ActionListener {
         private MatOfRect rects;
@@ -43,34 +38,20 @@ public class AddFaceDialog extends JDialog {
 
         public void actionPerformed(ActionEvent event) {
             Rect[] detections = rects.toArray();
-            for (int i = 0; i < detections.length; i++) {
-                Rect rect = detections[i];
+            for (Rect rect : detections) {
                 FacePicture fp = new FacePicture(candidate);
                 fp.drawRectangle(new Rect(rect.x, rect.y, rect.width, rect.height));
                 fp.drawToLabel(imageLabel);
                 repaint();
 
-                File mediaDir = new File("faces/");
-                if (!mediaDir.exists() || !mediaDir.isDirectory()) {
-                    mediaDir = new File(System.getProperty("user.home"));
-                }
-
-                if (pictureDirChooser == null) {
-                    pictureDirChooser = new JFileChooser();
-                    pictureDirChooser.setAcceptAllFileFilterUsed(false);
-
-                    pictureDirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                    pictureDirChooser.setCurrentDirectory(mediaDir);
-                }
-                int returnVal = pictureDirChooser.showDialog(AddFaceDialog.this, "Select face directory");
-
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                initPictureDirChooser();
+                if (pictureDirChooser.showDialog(AddFaceDialog.this,
+                        "Select face directory") == JFileChooser.APPROVE_OPTION) {
                     File selectedDir = pictureDirChooser.getSelectedFile();
-                    if (saveAsProfile.isSelected()) {
-                        saveAsProfileImage(selectedDir);
+                    if (alsoSaveAsProfile.isSelected()) {
+                        candidate.createProfileImage(rect).saveAsProfileImage(selectedDir);
                     }
-                    String path = createPictureFilePathName(selectedDir);
-                    candidate.isolateFace(rect).writeToPathname(path);
+                    candidate.isolateFace(rect).writeToPathname(createPictureFilePathName(selectedDir));
                     FaceRecog.retrain(selectedDir.getParent());
                 }
             }
@@ -79,14 +60,31 @@ public class AddFaceDialog extends JDialog {
         }
     }
 
-    public AddFaceDialog() {
-        this(new FacePicture());
+    public AddFaceDialog(FacePicture[] facePictures) {
+        initPictureDirChooser();
+        if (pictureDirChooser.showDialog(AddFaceDialog.this, "Select face directory") == JFileChooser.APPROVE_OPTION) {
+            File selectedDir = pictureDirChooser.getSelectedFile();
+            for (FacePicture fp : facePictures) {
+                Rect[] rects = fp.detectFaces().toArray();
+                if (rects.length == 1) {
+                    fp.isolateFace(rects[0]).writeToPathname(createPictureFilePathName(selectedDir));
+                }
+            }
+            FaceRecog.retrain(selectedDir.getParent());
+        }
     }
 
     public AddFaceDialog(FacePicture fp) {
-        super();
         candidate = new FacePicture(fp);
         initGui();
+    }
+
+    public AddFaceDialog() {
+        initPictureDirChooser();
+        pictureDirChooser.showDialog(this, "Select media folder");
+        if (pictureDirChooser.getSelectedFile() != null) {
+            FaceRecog.retrain(pictureDirChooser.getSelectedFile().getPath());
+        }
     }
 
     private void initGui() {
@@ -108,24 +106,43 @@ public class AddFaceDialog extends JDialog {
                 controlsPanel.add(saveFacesButton);
                 if (rects.rows() == 1) {
                     saveFacesButton.setText("Save face");
-                    saveAsProfile.setSelected(true);
-                    controlsPanel.add(saveAsProfile);
+                    alsoSaveAsProfile.setSelected(true);
+                    controlsPanel.add(alsoSaveAsProfile);
                 }
                 fp.drawToLabel(imageLabel);
-            } else {
-                JButton quitButton = new JButton("No faces detected. Close Window.");
-                quitButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent event) {
-                        setVisible(false);
-                        dispose();
-                    }
-                });
-                controlsPanel.add(quitButton);
             }
+            JButton saveAsProfileButton = new JButton("Save as profile picture");
+            saveAsProfileButton.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent event) {
+                    initPictureDirChooser();
+                    if (pictureDirChooser.showDialog(AddFaceDialog.this,
+                            "Select face directory") == JFileChooser.APPROVE_OPTION) {
+                        candidate.saveAsProfileImage(pictureDirChooser.getSelectedFile());
+                    }
+                    setVisible(false);
+                    dispose();
+                }
+            });
+            controlsPanel.add(saveAsProfileButton);
         }
 
         pack();
         setVisible(true);
+    }
+
+    private void initPictureDirChooser() {
+        if (pictureDirChooser == null) {
+            pictureDirChooser = new JFileChooser();
+            pictureDirChooser.setAcceptAllFileFilterUsed(false);
+
+            pictureDirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+            File mediaDir = new File("faces/");
+            if (!mediaDir.exists() || !mediaDir.isDirectory()) {
+                mediaDir = new File(System.getProperty("user.home"));
+            }
+            pictureDirChooser.setCurrentDirectory(mediaDir);
+        }
     }
 
     private String createPictureFilePathName(File dir) {
@@ -136,24 +153,5 @@ public class AddFaceDialog extends JDialog {
             counter++;
         }
         return file.getPath();
-    }
-    
-    private void saveAsProfileImage(File directory) {
-        BufferedImage bimage = candidate.toBufferedImage();
-        Image img = bimage.getScaledInstance(-1, 300, BufferedImage.SCALE_DEFAULT);
-        // Create a new buffered image with transparency
-        bimage = new BufferedImage(img.getWidth(null), img.getHeight(null),
-                BufferedImage.TYPE_INT_ARGB);
-        // Draw the scaled image on to the buffered image
-        Graphics2D bGr = bimage.createGraphics();
-        bGr.drawImage(img, 0, 0, null);
-        bGr.dispose();
-
-        try {
-            ImageIO.write(bimage, "jpg", new File(directory.getPath() + "/profilePicture.jpg"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        
     }
 }
