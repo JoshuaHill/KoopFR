@@ -81,7 +81,7 @@ public class AddFaceDialog extends JDialog {
 
     public AddFaceDialog() {
         initPictureDirChooser();
-        pictureDirChooser.showDialog(AddFaceDialog.this, "Select media folder");
+        pictureDirChooser.showDialog(this, "Select media folder");
         if (pictureDirChooser.getSelectedFile() != null) {
             FaceRecog.retrain(pictureDirChooser.getSelectedFile().getPath());
         }

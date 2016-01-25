@@ -172,7 +172,7 @@ public class FaceRecogApp extends JFrame {
     }
 
     private JMenuItem createImportPictureMenuItem() {
-        JMenuItem pictureMenuItem = new JMenuItem("Import Picture");
+        JMenuItem pictureMenuItem = new JMenuItem("Import Picture(s)");
         pictureMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 stop();

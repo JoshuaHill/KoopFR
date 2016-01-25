@@ -62,6 +62,10 @@ public class FacePicture {
     }
 
     // Image Scaling
+    void scaleImage(double factor) {
+        scaleImage(new Size(picture.width()*factor, picture.height()*factor));
+    }
+    
     void scaleImage(Size size) {
         Mat snapshotScaled = new Mat();
         Imgproc.resize(picture, snapshotScaled, size);
@@ -203,11 +207,13 @@ public class FacePicture {
     void showLookAlikePicture(Prediction pred, Rect rect) {
         JFrame lookAlikeWindow = new JFrame();
 
-        JButton heading = new JButton("<html><body><h1>OMG, You look like " + pred.getName() + "!</h1></body></html>");
+        JButton heading = new JButton("<html><body><h1>OMG: You look just like " + pred.getName() + "!</h1></body></html>");
         lookAlikeWindow.add(heading, BorderLayout.PAGE_START);
 
         JLabel snapShotLabel = new JLabel();
-        createProfileImage(rect).drawToLabel(snapShotLabel);
+        FacePicture snapShot = createProfileImage(rect);
+        snapShot.scaleImage(2.0);
+        snapShot.drawToLabel(snapShotLabel);
         lookAlikeWindow.add(snapShotLabel, BorderLayout.LINE_END);
 
         File profileFile = pred.getProfilePictureFile();
