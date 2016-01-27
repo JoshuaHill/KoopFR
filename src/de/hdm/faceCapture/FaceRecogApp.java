@@ -51,6 +51,7 @@ public class FaceRecogApp extends JFrame {
     private FacePicture webcamImage = new FacePicture();
     private JCheckBox displayNames = new JCheckBox("Names", false);
     private JCheckBox movingPics = new JCheckBox("Moving Pics");
+
     private boolean isLookAlikeRequest = false;
     private JFileChooser importFileChooser = null;
     private FileNameExtensionFilter imageFileFilter = new FileNameExtensionFilter("Images", "jpg", "jpeg", "gif",
@@ -83,7 +84,7 @@ public class FaceRecogApp extends JFrame {
 
     // GUI: Initialisierung
     private void initGUI() {
-        
+
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         JMenu pictureMenu = new JMenu("File");
@@ -91,7 +92,6 @@ public class FaceRecogApp extends JFrame {
         pictureMenu.add(createImportPictureMenuItem());
         pictureMenu.add(createSelectMediaDirMenuItem());
         pictureMenu.add(createExitMenuItem());
-        
 
         setLayout(new BorderLayout());
         add(imageLabel, BorderLayout.CENTER);
@@ -111,7 +111,7 @@ public class FaceRecogApp extends JFrame {
             }
         });
         buttonPanel.add(createDeviceRadioButtons());
-        
+
         buttonPanel.add(createLookAlikeButton());
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -138,7 +138,7 @@ public class FaceRecogApp extends JFrame {
             }
         });
     }
-    
+
     private void exit() {
         stop();
         capture.release();
@@ -146,11 +146,11 @@ public class FaceRecogApp extends JFrame {
         System.exit(DISPOSE_ON_CLOSE);
         dispose();
     }
-    
+
     private JMenuItem createExitMenuItem() {
         JMenuItem menuItem = new JMenuItem("Exit");
         menuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent event){
+            public void actionPerformed(ActionEvent event) {
                 exit();
             }
         });
@@ -163,8 +163,7 @@ public class FaceRecogApp extends JFrame {
         pictureButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 stop();
-                FacePicture fp = new FacePicture(webcamImage);
-                new AddFaceDialog(fp);
+                new AddFaceDialog(new FacePicture(webcamImage));
                 start();
             }
         });
@@ -190,28 +189,28 @@ public class FaceRecogApp extends JFrame {
 
                     File[] selectedFiles = importFileChooser.getSelectedFiles();
                     FacePicture[] facePictures = new FacePicture[selectedFiles.length];
-                    for (int i=0; i< selectedFiles.length; i++){
-                        facePictures[i]=new FacePicture();
+                    for (int i = 0; i < selectedFiles.length; i++) {
+                        facePictures[i] = new FacePicture();
                         facePictures[i].importFrom(selectedFiles[i]);
-                    } 
+                    }
 
                     // just for checks write modified picture to picture dir
                     // fp.writeToPathname(System.getProperty("user.home") +
                     // "/Desktop/test.png");
-                    if (facePictures.length==1){
+                    if (facePictures.length == 1) {
                         new AddFaceDialog(facePictures[0]);
                     } else {
                         new AddFaceDialog(facePictures);
                     }
                 }
-                
+
                 start();
             }
         });
         pictureMenuItem.setTransferHandler(new PictureFileTransferHandler());
         return pictureMenuItem;
     }
-    
+
     private JMenuItem createSelectMediaDirMenuItem() {
         JMenuItem selectMenuItem = new JMenuItem("Select Media Folder");
         selectMenuItem.addActionListener(new ActionListener() {
@@ -224,11 +223,9 @@ public class FaceRecogApp extends JFrame {
         return selectMenuItem;
     }
 
-    
-
     private JPanel createDeviceRadioButtons() {
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.LINE_AXIS));
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
         ButtonGroup bg = new ButtonGroup();
         ActionListener al = new ActionListener() {
             public void actionPerformed(ActionEvent event) {
@@ -262,7 +259,7 @@ public class FaceRecogApp extends JFrame {
         }
         return buttonPanel;
     }
-    
+
     private JButton createLookAlikeButton() {
         JButton findLookAlike = new JButton("Find Look Alike");
         findLookAlike.addActionListener(new ActionListener() {
@@ -303,15 +300,14 @@ public class FaceRecogApp extends JFrame {
                     if (webcamImage.capture(capture)) {
                         sleep(100);
                         faceDetections = webcamImage.detectFaces();
-                        if (!faceDetections.empty() && displayNames.isSelected() 
-                                || movingPics.isSelected()
+                        if (!faceDetections.empty() && displayNames.isSelected() || movingPics.isSelected()
                                 || isLookAlikeRequest) {
                             faces = webcamImage.isolateFaces(faceDetections);
                             predictions = FaceRecog.recognizeFaces(faces);
                             if (displayNames.isSelected()) {
                                 webcamImage.displayNames(predictions, faceDetections);
                             }
-                            if (isLookAlikeRequest && predictions.length==1) {
+                            if (isLookAlikeRequest && predictions.length == 1) {
                                 isLookAlikeRequest = false;
                                 webcamImage.showLookAlikePicture(predictions[0], faceDetections.toArray()[0]);
                             }
@@ -326,7 +322,9 @@ public class FaceRecogApp extends JFrame {
                                     } else {
                                         movingPictures.put(pred.getName(), new MovingPicture(pred.getName()));
                                     }
-                                }
+                                } 
+                            }else {
+                                movingPictures.clear();
                             }
                         }
                         webcamImage.drawRectangles(faceDetections);
