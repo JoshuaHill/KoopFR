@@ -9,12 +9,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
@@ -25,7 +26,9 @@ public class AddFaceDialog extends JDialog {
      */
     private static final long serialVersionUID = 1L;
     private JLabel imageLabel = new JLabel();
-    private JCheckBox alsoSaveAsProfile = new JCheckBox("Also save as profile picture", false);
+    private JRadioButton alsoSaveAsProfile = new JRadioButton("Also as Profile Picture", false);
+    private JRadioButton SaveAsProfile = new JRadioButton("Only as Profile Picture");
+    private JRadioButton justTheFace = new JRadioButton("Just the Face");
     private FacePicture candidate;
     private static JFileChooser pictureDirChooser = null;
 
@@ -46,13 +49,15 @@ public class AddFaceDialog extends JDialog {
 
                 initPictureDirChooser();
                 if (pictureDirChooser.showDialog(AddFaceDialog.this,
-                        "Select face directory") == JFileChooser.APPROVE_OPTION) {
+                        "Select Faces Folder") == JFileChooser.APPROVE_OPTION) {
                     File selectedDir = pictureDirChooser.getSelectedFile();
-                    if (alsoSaveAsProfile.isSelected()) {
+                    if (alsoSaveAsProfile.isSelected() || SaveAsProfile.isSelected()) {
                         candidate.createProfileImage(rect).saveAsProfileImage(selectedDir);
                     }
-                    candidate.isolateFace(rect).writeToPathname(createPictureFilePathName(selectedDir));
-                    FaceRecog.retrain(selectedDir.getParent());
+                    if (alsoSaveAsProfile.isSelected() || justTheFace.isSelected()) {
+                        candidate.isolateFace(rect).writeToPathname(createPictureFilePathName(selectedDir));
+                        FaceRecog.retrain(selectedDir.getParent());
+                    }
                 }
             }
             setVisible(false);
@@ -62,7 +67,7 @@ public class AddFaceDialog extends JDialog {
 
     public AddFaceDialog(FacePicture[] facePictures) {
         initPictureDirChooser();
-        if (pictureDirChooser.showDialog(AddFaceDialog.this, "Select face directory") == JFileChooser.APPROVE_OPTION) {
+        if (pictureDirChooser.showDialog(AddFaceDialog.this, "Select Faces Folder") == JFileChooser.APPROVE_OPTION) {
             File selectedDir = pictureDirChooser.getSelectedFile();
             for (FacePicture fp : facePictures) {
                 Rect[] rects = fp.detectFaces().toArray();
@@ -81,7 +86,7 @@ public class AddFaceDialog extends JDialog {
 
     public AddFaceDialog() {
         initPictureDirChooser();
-        pictureDirChooser.showDialog(this, "Select media folder");
+        pictureDirChooser.showDialog(this, "Select Media Folder");
         if (pictureDirChooser.getSelectedFile() != null) {
             FaceRecog.retrain(pictureDirChooser.getSelectedFile().getPath());
         }
@@ -93,6 +98,11 @@ public class AddFaceDialog extends JDialog {
         candidate.drawToLabel(imageLabel);
         JPanel controlsPanel = new JPanel();
         add(controlsPanel, BorderLayout.SOUTH);
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(SaveAsProfile);
+        bg.add(alsoSaveAsProfile);
+        bg.add(justTheFace);
+        
 
         if (candidate != null) {
             MatOfRect rects = candidate.detectFaces();
@@ -101,29 +111,18 @@ public class AddFaceDialog extends JDialog {
                 FacePicture fp = new FacePicture(candidate);
                 fp.drawRectangles(rects);
 
-                JButton saveFacesButton = new JButton("Save faces");
+                JButton saveFacesButton = new JButton("Save Faces");
                 saveFacesButton.addActionListener(new saveFacesButtonActionListener(rects));
                 controlsPanel.add(saveFacesButton);
                 if (rects.rows() == 1) {
-                    saveFacesButton.setText("Save face");
+                    saveFacesButton.setText("Save Face");
                     alsoSaveAsProfile.setSelected(true);
+                    controlsPanel.add(justTheFace);
                     controlsPanel.add(alsoSaveAsProfile);
+                    controlsPanel.add(SaveAsProfile);
                 }
                 fp.drawToLabel(imageLabel);
             }
-            JButton saveAsProfileButton = new JButton("Save as profile picture");
-            saveAsProfileButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    initPictureDirChooser();
-                    if (pictureDirChooser.showDialog(AddFaceDialog.this,
-                            "Select face directory") == JFileChooser.APPROVE_OPTION) {
-                        candidate.saveAsProfileImage(pictureDirChooser.getSelectedFile());
-                    }
-                    setVisible(false);
-                    dispose();
-                }
-            });
-            controlsPanel.add(saveAsProfileButton);
         }
 
         pack();
@@ -143,6 +142,11 @@ public class AddFaceDialog extends JDialog {
             }
             pictureDirChooser.setCurrentDirectory(mediaDir);
         }
+    }
+    
+    public File getLastSelectedFile() {
+        initPictureDirChooser();
+        return pictureDirChooser.getSelectedFile();
     }
 
     private String createPictureFilePathName(File dir) {
