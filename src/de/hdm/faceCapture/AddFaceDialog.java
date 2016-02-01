@@ -30,7 +30,7 @@ public class AddFaceDialog extends JDialog {
     private JRadioButton SaveAsProfile = new JRadioButton("Only as Profile Picture");
     private JRadioButton justTheFace = new JRadioButton("Just the Face");
     private FacePicture candidate;
-    private static JFileChooser pictureDirChooser = null;
+    static JFileChooser pictureDirChooser = initPictureDirChooser();
 
     private class saveFacesButtonActionListener implements ActionListener {
         private MatOfRect rects;
@@ -47,7 +47,6 @@ public class AddFaceDialog extends JDialog {
                 fp.drawToLabel(imageLabel);
                 repaint();
 
-                initPictureDirChooser();
                 if (pictureDirChooser.showDialog(AddFaceDialog.this,
                         "Select Faces Folder") == JFileChooser.APPROVE_OPTION) {
                     File selectedDir = pictureDirChooser.getSelectedFile();
@@ -56,7 +55,7 @@ public class AddFaceDialog extends JDialog {
                     }
                     if (alsoSaveAsProfile.isSelected() || justTheFace.isSelected()) {
                         candidate.isolateFace(rect).writeToPathname(createPictureFilePathName(selectedDir));
-                        FaceRecog.retrain(selectedDir.getParent());
+                        FaceRecog.retrain(selectedDir.getParentFile());
                     }
                 }
             }
@@ -66,7 +65,6 @@ public class AddFaceDialog extends JDialog {
     }
 
     public AddFaceDialog(FacePicture[] facePictures) {
-        initPictureDirChooser();
         if (pictureDirChooser.showDialog(AddFaceDialog.this, "Select Faces Folder") == JFileChooser.APPROVE_OPTION) {
             File selectedDir = pictureDirChooser.getSelectedFile();
             for (FacePicture fp : facePictures) {
@@ -75,7 +73,7 @@ public class AddFaceDialog extends JDialog {
                     fp.isolateFace(rects[0]).writeToPathname(createPictureFilePathName(selectedDir));
                 }
             }
-            FaceRecog.retrain(selectedDir.getParent());
+            FaceRecog.retrain(selectedDir.getParentFile());
         }
     }
 
@@ -84,12 +82,12 @@ public class AddFaceDialog extends JDialog {
         initGui();
     }
 
-    public AddFaceDialog() {
-        initPictureDirChooser();
+    public AddFaceDialog(MediaFoldersMenu mediaFolderMenu) {
         pictureDirChooser.showDialog(this, "Select Media Folder");
-        if (pictureDirChooser.getSelectedFile() != null) {
-            FaceRecog.retrain(pictureDirChooser.getSelectedFile().getPath());
-        }
+        FaceRecog.retrain(pictureDirChooser.getSelectedFile());
+        
+        mediaFolderMenu.addFolder(pictureDirChooser.getSelectedFile());
+        mediaFolderMenu.saveMediaFolders();
     }
 
     private void initGui() {
@@ -102,7 +100,6 @@ public class AddFaceDialog extends JDialog {
         bg.add(SaveAsProfile);
         bg.add(alsoSaveAsProfile);
         bg.add(justTheFace);
-        
 
         if (candidate != null) {
             MatOfRect rects = candidate.detectFaces();
@@ -129,23 +126,21 @@ public class AddFaceDialog extends JDialog {
         setVisible(true);
     }
 
-    private void initPictureDirChooser() {
-        if (pictureDirChooser == null) {
-            pictureDirChooser = new JFileChooser();
-            pictureDirChooser.setAcceptAllFileFilterUsed(false);
+    private static JFileChooser initPictureDirChooser() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setAcceptAllFileFilterUsed(false);
 
-            pictureDirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
-            File mediaDir = new File("faces/");
-            if (!mediaDir.exists() || !mediaDir.isDirectory()) {
-                mediaDir = new File(System.getProperty("user.home"));
-            }
-            pictureDirChooser.setCurrentDirectory(mediaDir);
+        File mediaDir = new File("faces/");
+        if (!mediaDir.exists() || !mediaDir.isDirectory()) {
+            mediaDir = new File(System.getProperty("user.home"));
         }
+        chooser.setCurrentDirectory(mediaDir.getAbsoluteFile());
+        return chooser;
     }
-    
-    public File getLastSelectedFile() {
-        initPictureDirChooser();
+
+    public static File getLastSelectedFile() {
         return pictureDirChooser.getSelectedFile();
     }
 

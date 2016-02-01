@@ -46,11 +46,12 @@ public class FaceRecogApp extends JFrame {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
-    private static String trainingDir = "faces/";
+    private static File trainingDir = new File("faces/");
     private JLabel imageLabel = new JLabel();
     private FacePicture webcamImage = new FacePicture();
     private JCheckBox displayNames = new JCheckBox("Names", false);
     private JCheckBox movingPics = new JCheckBox("Moving Pics");
+    private MediaFoldersMenu previousMediaFolders = new MediaFoldersMenu("Previous Media Folders");
 
     private boolean isLookAlikeRequest = false;
     private JFileChooser importFileChooser = null;
@@ -66,7 +67,7 @@ public class FaceRecogApp extends JFrame {
     // Main Methode
     public static void main(String[] args) {
         if (args.length > 0) {
-            trainingDir = args[0];
+            trainingDir = new File(args[0]);
         }
         FaceRecogApp app = new FaceRecogApp("Face Recognizer");
         app.initGUI();
@@ -91,6 +92,10 @@ public class FaceRecogApp extends JFrame {
         menuBar.add(pictureMenu);
         pictureMenu.add(createImportPictureMenuItem());
         pictureMenu.add(createSelectMediaDirMenuItem());
+        
+        previousMediaFolders.readMediaFolders();
+        pictureMenu.add(previousMediaFolders);
+        
         pictureMenu.add(createExitMenuItem());
 
         setLayout(new BorderLayout());
@@ -111,7 +116,6 @@ public class FaceRecogApp extends JFrame {
             }
         });
         buttonPanel.add(createDeviceRadioButtons());
-
         buttonPanel.add(createLookAlikeButton());
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -216,7 +220,7 @@ public class FaceRecogApp extends JFrame {
         selectMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 stop();
-                new AddFaceDialog();
+                new AddFaceDialog(previousMediaFolders);
                 start();
             }
         });

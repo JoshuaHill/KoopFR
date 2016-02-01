@@ -36,8 +36,7 @@ public class FaceRecog {
     };
 
     // Training
-    public static void retrain(String trainingDir) {
-        File mediaDir = new File(trainingDir);
+    public static void retrain(File mediaDir) {
         if (!mediaDir.exists() || !mediaDir.isDirectory()) {
             mediaDir.mkdirs();
         }
