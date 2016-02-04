@@ -51,7 +51,6 @@ public class FaceRecogApp extends JFrame {
     private FacePicture webcamImage = new FacePicture();
     private JCheckBox displayNames = new JCheckBox("Names", false);
     private JCheckBox movingPics = new JCheckBox("Moving Pics");
-    private MediaFoldersMenu previousMediaFolders = new MediaFoldersMenu("Previous Media Folders");
 
     private boolean isLookAlikeRequest = false;
     private JFileChooser importFileChooser = null;
@@ -90,12 +89,9 @@ public class FaceRecogApp extends JFrame {
         setJMenuBar(menuBar);
         JMenu pictureMenu = new JMenu("File");
         menuBar.add(pictureMenu);
-        pictureMenu.add(createImportPictureMenuItem());
-        pictureMenu.add(createSelectMediaDirMenuItem());
         
-        previousMediaFolders.readMediaFolders();
-        pictureMenu.add(previousMediaFolders);
-        
+        pictureMenu.add(createImportPictureMenuItem());        
+        pictureMenu.add(FaceRecog.previousMediaFolders);        
         pictureMenu.add(createExitMenuItem());
 
         setLayout(new BorderLayout());
@@ -215,18 +211,6 @@ public class FaceRecogApp extends JFrame {
         return pictureMenuItem;
     }
 
-    private JMenuItem createSelectMediaDirMenuItem() {
-        JMenuItem selectMenuItem = new JMenuItem("Select Media Folder");
-        selectMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                stop();
-                new AddFaceDialog(previousMediaFolders);
-                start();
-            }
-        });
-        return selectMenuItem;
-    }
-
     private JPanel createDeviceRadioButtons() {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
@@ -324,7 +308,7 @@ public class FaceRecogApp extends JFrame {
                                     if (movingPictures.containsKey(pred.getName())) {
                                         movingPictures.get(pred.getName()).reset();
                                     } else {
-                                        movingPictures.put(pred.getName(), new MovingPicture(pred.getName()));
+                                        movingPictures.put(pred.getName(), new MovingPicture(pred));
                                     }
                                 } 
                             }else {

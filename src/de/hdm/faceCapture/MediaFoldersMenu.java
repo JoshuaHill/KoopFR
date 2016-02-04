@@ -4,7 +4,6 @@
  */
 package de.hdm.faceCapture;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -26,12 +25,14 @@ public class MediaFoldersMenu extends JMenu {
 
     public MediaFoldersMenu(String text) {
         super(text);
-    }
-
-    void initialize(File[] folders) {
-        for (File folder : folders) {
-            addFolder(folder);
-        }
+        JMenuItem first = new JMenuItem("Select Media Folder");
+        first.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                new AddFaceDialog();
+            }
+        });
+        add(first);
+        readMediaFolders();
     }
 
     void addFolder(File folder) {
@@ -41,26 +42,21 @@ public class MediaFoldersMenu extends JMenu {
                 File file = folder;
 
                 public void actionPerformed(ActionEvent ae) {
+                    addFolder(file);
                     FaceRecog.retrain(file);
                 }
             });
-            add(menuItem, 0);
-            
-            int i=1;
-            boolean foundIt=false;
-            JMenuItem item = null;
-            for (; i<getItemCount(); i++) {
-                item = (JMenuItem)getMenuComponent(i);
-                if (folder.getAbsolutePath().equals(item.getText())){
-                    foundIt=true;
-                    break;
+            add(menuItem, 1);
+
+            for (int i = 2; i < getItemCount(); i++) {
+                menuItem = (JMenuItem) getMenuComponent(i);
+                if (folder.getAbsolutePath().equals(menuItem.getText())) {
+                    remove(menuItem);
+                    i--;
                 }
             }
-            if (foundIt) {
-                remove(item);
-            }
-            if (getItemCount()>10) {
-                remove(getMenuComponent(getItemCount()-1));
+            if (getItemCount() > 10) {
+                remove(getMenuComponent(getItemCount() - 1));
             }
         }
     }
@@ -85,8 +81,8 @@ public class MediaFoldersMenu extends JMenu {
 
     void saveMediaFolders() {
         String pathNames = new String();
-        for (Component menuItem : getMenuComponents()) {
-            pathNames += ";" + ((JMenuItem) menuItem).getText();
+        for (int i=1; i<getItemCount(); i++) {
+            pathNames += ";" + ((JMenuItem) getMenuComponent(i)).getText();
         }
         if (pathNames.length() > 0) {
             pathNames = pathNames.substring(1);

@@ -50,11 +50,13 @@ public class AddFaceDialog extends JDialog {
                 if (pictureDirChooser.showDialog(AddFaceDialog.this,
                         "Select Faces Folder") == JFileChooser.APPROVE_OPTION) {
                     File selectedDir = pictureDirChooser.getSelectedFile();
-                    if (alsoSaveAsProfile.isSelected() || SaveAsProfile.isSelected()) {
-                        candidate.createProfileImage(rect).saveAsProfileImage(selectedDir);
-                    }
-                    if (alsoSaveAsProfile.isSelected() || justTheFace.isSelected()) {
-                        candidate.isolateFace(rect).writeToPathname(createPictureFilePathName(selectedDir));
+                    if (selectedDir != null) {
+                        if (alsoSaveAsProfile.isSelected() || SaveAsProfile.isSelected()) {
+                            candidate.createProfileImage(rect).saveAsProfileImage(selectedDir);
+                        }
+                        if (alsoSaveAsProfile.isSelected() || justTheFace.isSelected()) {
+                            candidate.isolateFace(rect).writeToPathname(createPictureFilePathName(selectedDir));
+                        }
                         FaceRecog.retrain(selectedDir.getParentFile());
                     }
                 }
@@ -67,13 +69,15 @@ public class AddFaceDialog extends JDialog {
     public AddFaceDialog(FacePicture[] facePictures) {
         if (pictureDirChooser.showDialog(AddFaceDialog.this, "Select Faces Folder") == JFileChooser.APPROVE_OPTION) {
             File selectedDir = pictureDirChooser.getSelectedFile();
-            for (FacePicture fp : facePictures) {
-                Rect[] rects = fp.detectFaces().toArray();
-                if (rects.length == 1) {
-                    fp.isolateFace(rects[0]).writeToPathname(createPictureFilePathName(selectedDir));
+            if (selectedDir != null) {
+                for (FacePicture fp : facePictures) {
+                    Rect[] rects = fp.detectFaces().toArray();
+                    if (rects.length == 1) {
+                        fp.isolateFace(rects[0]).writeToPathname(createPictureFilePathName(selectedDir));
+                    }
                 }
+                FaceRecog.retrain(selectedDir.getParentFile());
             }
-            FaceRecog.retrain(selectedDir.getParentFile());
         }
     }
 
@@ -82,12 +86,11 @@ public class AddFaceDialog extends JDialog {
         initGui();
     }
 
-    public AddFaceDialog(MediaFoldersMenu mediaFolderMenu) {
+    public AddFaceDialog() {
         pictureDirChooser.showDialog(this, "Select Media Folder");
-        FaceRecog.retrain(pictureDirChooser.getSelectedFile());
-        
-        mediaFolderMenu.addFolder(pictureDirChooser.getSelectedFile());
-        mediaFolderMenu.saveMediaFolders();
+        if (pictureDirChooser.getSelectedFile() != null) {
+            FaceRecog.retrain(pictureDirChooser.getSelectedFile());
+        }
     }
 
     private void initGui() {
@@ -129,14 +132,8 @@ public class AddFaceDialog extends JDialog {
     private static JFileChooser initPictureDirChooser() {
         JFileChooser chooser = new JFileChooser();
         chooser.setAcceptAllFileFilterUsed(false);
-
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
-        File mediaDir = new File("faces/");
-        if (!mediaDir.exists() || !mediaDir.isDirectory()) {
-            mediaDir = new File(System.getProperty("user.home"));
-        }
-        chooser.setCurrentDirectory(mediaDir.getAbsoluteFile());
+        chooser.setCurrentDirectory(new File(System.getProperty("user.home")).getAbsoluteFile());
         return chooser;
     }
 
