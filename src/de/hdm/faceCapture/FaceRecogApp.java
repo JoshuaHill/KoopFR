@@ -46,7 +46,7 @@ public class FaceRecogApp extends JFrame {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
-    private static String trainingDir = "faces/";
+    private static File trainingDir = new File("faces/");
     private JLabel imageLabel = new JLabel();
     private FacePicture webcamImage = new FacePicture();
     private JCheckBox displayNames = new JCheckBox("Names", false);
@@ -66,7 +66,7 @@ public class FaceRecogApp extends JFrame {
     // Main Methode
     public static void main(String[] args) {
         if (args.length > 0) {
-            trainingDir = args[0];
+            trainingDir = new File(args[0]);
         }
         FaceRecogApp app = new FaceRecogApp("Face Recognizer");
         app.initGUI();
@@ -89,8 +89,9 @@ public class FaceRecogApp extends JFrame {
         setJMenuBar(menuBar);
         JMenu pictureMenu = new JMenu("File");
         menuBar.add(pictureMenu);
-        pictureMenu.add(createImportPictureMenuItem());
-        pictureMenu.add(createSelectMediaDirMenuItem());
+        
+        pictureMenu.add(createImportPictureMenuItem());        
+        pictureMenu.add(FaceRecog.previousMediaFolders);        
         pictureMenu.add(createExitMenuItem());
 
         setLayout(new BorderLayout());
@@ -111,7 +112,6 @@ public class FaceRecogApp extends JFrame {
             }
         });
         buttonPanel.add(createDeviceRadioButtons());
-
         buttonPanel.add(createLookAlikeButton());
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -211,18 +211,6 @@ public class FaceRecogApp extends JFrame {
         return pictureMenuItem;
     }
 
-    private JMenuItem createSelectMediaDirMenuItem() {
-        JMenuItem selectMenuItem = new JMenuItem("Select Media Folder");
-        selectMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                stop();
-                new AddFaceDialog();
-                start();
-            }
-        });
-        return selectMenuItem;
-    }
-
     private JPanel createDeviceRadioButtons() {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
@@ -320,7 +308,7 @@ public class FaceRecogApp extends JFrame {
                                     if (movingPictures.containsKey(pred.getName())) {
                                         movingPictures.get(pred.getName()).reset();
                                     } else {
-                                        movingPictures.put(pred.getName(), new MovingPicture(pred.getName()));
+                                        movingPictures.put(pred.getName(), new MovingPicture(pred));
                                     }
                                 } 
                             }else {

@@ -23,6 +23,7 @@ import org.bytedeco.javacpp.opencv_face.FaceRecognizer;
 public class FaceRecog {
 
     private static File[] directories = new File[0];
+    public static MediaFoldersMenu previousMediaFolders = new MediaFoldersMenu("Media Folder");
     private static FaceRecognizer faceRecognizer =
     // org.bytedeco.javacpp.opencv_face.createFisherFaceRecognizer();
     // org.bytedeco.javacpp.opencv_face.createEigenFaceRecognizer();
@@ -36,8 +37,7 @@ public class FaceRecog {
     };
 
     // Training
-    public static void retrain(String trainingDir) {
-        File mediaDir = new File(trainingDir);
+    public static void retrain(File mediaDir) {
         if (!mediaDir.exists() || !mediaDir.isDirectory()) {
             mediaDir.mkdirs();
         }
@@ -79,7 +79,10 @@ public class FaceRecog {
                 labelsBuf.put(fileCount, dirCounter);
             }
         }
-        faceRecognizer.train(images, labels);
+        faceRecognizer.train(images, labels);      
+
+        previousMediaFolders.addFolder(mediaDir);
+        previousMediaFolders.saveMediaFolders();
     }
 
     // Recognition using direct conversion

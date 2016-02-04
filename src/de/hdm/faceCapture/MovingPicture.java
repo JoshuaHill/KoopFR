@@ -21,11 +21,11 @@ public class MovingPicture extends JWindow {
     private static int screenHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
     
     
-    public MovingPicture(String name) {
+    public MovingPicture(Prediction pred) {
         JLabel label = new JLabel();
-        ImageIcon icon = new ImageIcon("faces/" + name + "/profilePicture.jpg");
+        ImageIcon icon = new ImageIcon(pred.getProfilePictureFile().getAbsolutePath());
         label.setIcon(icon);
-        label.setText("<html><h3>Hallo " + name + "</h3></html>");
+        label.setText("<html><h3>Hallo " + pred.getName() + "</h3></html>");
         label.setHorizontalTextPosition(SwingConstants.CENTER);
         label.setVerticalTextPosition(SwingConstants.BOTTOM);
         add(label);
@@ -72,11 +72,5 @@ public class MovingPicture extends JWindow {
             setVisible(false);
             dispose();
         }
-    };
-    
-    public static void main(String[] args){
-        new MovingPicture("Christian Rathke");
-        new MovingPicture("Peter Thies");
-        new MovingPicture("Alexander Roos");
     }
 }
