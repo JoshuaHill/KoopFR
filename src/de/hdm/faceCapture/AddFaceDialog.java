@@ -122,6 +122,15 @@ public class AddFaceDialog extends JDialog {
                     controlsPanel.add(SaveAsProfile);
                 }
                 fp.drawToLabel(imageLabel);
+            } else {
+                JButton closeButton = new JButton("No Face detected. Close.");
+                closeButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent event){
+                        setVisible(false);
+                        dispose();
+                    }
+                });
+                controlsPanel.add(closeButton);
             }
         }
 
